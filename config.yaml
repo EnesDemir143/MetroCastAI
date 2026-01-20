@@ -32,6 +32,8 @@ features:
     - "soil_temperature_0_to_7cm"
 
 # --- WMO Weather Interpretation Codes ---
+# Source: https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
+# Icons from OpenWeatherMap (standardized by WMO)
 weather_codes:
   0:
     day: { description: "Sunny", image: "http://openweathermap.org/img/wn/01d@2x.png" }
