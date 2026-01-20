@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useWeatherStore } from '@/store/useWeatherStore';
 import { translations } from '@/utils/translations';
-import { LineChart as LucideLineChart, Activity, Cpu, BookOpen, TrendingDown, History, Info, Timer, Zap, CheckCircle2, Image as ImageIcon, BarChart3, X, Maximize2 } from 'lucide-react';
+import { LineChart as LucideLineChart, Activity, Cpu, BookOpen, TrendingDown, History, Info, Timer, Zap, CheckCircle2, Image as ImageIcon, BarChart3, X, Maximize2, Layers } from 'lucide-react';
 import { fetchLatestWandBRun, fetchRunHistory, type WandBRunMetrics, type WandBHistoryPoint } from '@/services/wandbService';
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const IntelligenceConsole = () => {
     const { language } = useWeatherStore();
@@ -80,51 +80,63 @@ const IntelligenceConsole = () => {
 
                     {/* Left: Summary Cards & Controls */}
                     <div className="xl:col-span-1 space-y-6">
-                        {/* Final Loss Card */}
+                        {/* Training Loss Card */}
                         <div className="glass rounded-[2rem] p-6 border-white/[0.05] relative overflow-hidden group">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Train Metrics</span>
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Loss Metrics</span>
                                 <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                                     <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" />
                                     <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Finished</span>
                                 </div>
                             </div>
-                            <div className="flex items-end justify-between">
-                                <div className="space-y-1">
-                                    <h4 className="text-2xl font-black text-white italic tracking-tighter">
-                                        {metrics?.loss?.toFixed(6) || '---'}
-                                    </h4>
-                                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Total Train Loss</p>
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-end justify-between">
+                                    <div className="space-y-1">
+                                        <h4 className="text-2xl font-black text-white italic tracking-tighter">
+                                            {metrics?.loss?.toFixed(6) || '---'}
+                                        </h4>
+                                        <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Total Train Loss</p>
+                                    </div>
+                                    <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
+                                        <Activity className="h-4 w-4 text-primary" />
+                                    </div>
                                 </div>
-                                <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
-                                    <Activity className="h-4 w-4 text-primary" />
-                                </div>
+                                {metrics?.valLoss && (
+                                    <div className="flex items-end justify-between pt-4 border-t border-white/5">
+                                        <div className="space-y-1">
+                                            <h4 className="text-xl font-black text-zinc-300 italic tracking-tighter">
+                                                {metrics.valLoss.toFixed(6)}
+                                            </h4>
+                                            <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Val Loss</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/50 to-transparent"></div>
                         </div>
 
-                        {/* Test MAE Card */}
+                        {/* Total Batches / Steps */}
                         <div className="glass rounded-[2rem] p-6 border-white/[0.05] flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-2xl bg-zinc-800/50 border border-white/5 group-hover:bg-blue-500/10 group-hover:border-blue-500/20 transition-all">
+                                    <Layers className="h-4 w-4 text-zinc-400 group-hover:text-blue-500" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Total Batches / Steps</p>
+                                    <p className="text-lg font-black text-white italic">{metrics?.totalSteps?.toLocaleString() || '---'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Test MAE Card */}
+                        <div className="glass rounded-[2rem] p-6 border-white/[0.05] flex items-center justify-between group underline-offset-4">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-zinc-800/50 border border-white/5 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 transition-all">
                                     <BarChart3 className="h-4 w-4 text-zinc-400 group-hover:text-amber-500" />
                                 </div>
                                 <div className="space-y-0.5">
-                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Final Validation MAE</p>
+                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Final Accuracy (MAE)</p>
                                     <p className="text-lg font-black text-white italic">{metrics?.mae?.toFixed(4) || '---'}°C</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Session Duration Panel */}
-                        <div className="glass rounded-[2rem] p-6 border-white/[0.05] flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-zinc-800/50 border border-white/5 group-hover:bg-primary/10 group-hover:border-primary/20 transition-all">
-                                    <Timer className="h-4 w-4 text-zinc-400 group-hover:text-primary" />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{t.trainingDuration}</p>
-                                    <p className="text-lg font-black text-white italic">{formatDuration(metrics?.duration || null)}</p>
                                 </div>
                             </div>
                         </div>
@@ -146,7 +158,7 @@ const IntelligenceConsole = () => {
                     {/* Middle/Right: Live Charts */}
                     <div className="xl:col-span-3 space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
-                            {/* Loss Chart */}
+                            {/* Loss Graphics */}
                             <div className="glass rounded-[2.5rem] p-8 border-white/[0.05] flex flex-col">
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-3">
@@ -154,13 +166,13 @@ const IntelligenceConsole = () => {
                                             <LucideLineChart className="h-4 w-4 text-blue-500" />
                                         </div>
                                         <div>
-                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">{t.performanceAnalytics}</h4>
+                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">Loss Graphics</h4>
                                             <p className="text-[8px] text-zinc-500 uppercase font-black">{t.lossChart}</p>
                                         </div>
                                     </div>
                                     <History className="h-3.5 w-3.5 text-zinc-800" />
                                 </div>
-                                <div className="flex-1 min-h-[220px]">
+                                <div className="flex-1 min-h-[250px]">
                                     {isLoading ? (
                                         <div className="w-full h-full flex items-center justify-center">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -191,6 +203,7 @@ const IntelligenceConsole = () => {
                                                 <Line
                                                     type="monotone"
                                                     dataKey="loss"
+                                                    name="Train Loss"
                                                     stroke="#3b82f6"
                                                     strokeWidth={2.5}
                                                     dot={false}
@@ -207,7 +220,7 @@ const IntelligenceConsole = () => {
                                 </div>
                             </div>
 
-                            {/* MAE Chart */}
+                            {/* Accuracy Graphics (MAE) */}
                             <div className="glass rounded-[2.5rem] p-8 border-white/[0.05] flex flex-col">
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-3">
@@ -215,13 +228,13 @@ const IntelligenceConsole = () => {
                                             <LucideLineChart className="h-4 w-4 text-amber-500" />
                                         </div>
                                         <div>
-                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">{t.performanceAnalytics}</h4>
+                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">Accuracy Graphics</h4>
                                             <p className="text-[8px] text-zinc-500 uppercase font-black">{t.maeChart}</p>
                                         </div>
                                     </div>
                                     <TrendingDown className="h-3.5 w-3.5 text-zinc-800" />
                                 </div>
-                                <div className="flex-1 min-h-[220px]">
+                                <div className="flex-1 min-h-[250px]">
                                     {isLoading ? (
                                         <div className="w-full h-full flex items-center justify-center">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -250,6 +263,7 @@ const IntelligenceConsole = () => {
                                                 <Line
                                                     type="monotone"
                                                     dataKey="valMae"
+                                                    name="Validation MAE"
                                                     stroke="#f59e0b"
                                                     strokeWidth={2.5}
                                                     dot={false}

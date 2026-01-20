@@ -26,10 +26,6 @@ const Header = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.05]">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">System Live</span>
-                    </div>
                     <Button
                         variant="ghost"
                         size="sm"
