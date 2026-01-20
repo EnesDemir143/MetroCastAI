@@ -624,12 +624,85 @@ def train(config: dict):
     if config['wandb']['enabled']:
         wandb.run.summary['test_mae_celsius'] = test_mae
         wandb.run.summary['test_rmse_celsius'] = test_rmse
+    
+    # Export models to ONNX format
+    print("\n" + "-" * 60)
+    print("Exporting models to ONNX format...")
+    
+    # Export best model to ONNX
+    best_model_path = os.path.join(ROOT_DIR, 'models', 'best_model.pt')
+    best_onnx_path = os.path.join(ROOT_DIR, 'models', 'best_model.onnx')
+    export_to_onnx(best_model_path, best_onnx_path, config, device)
+    
+    # Export final model to ONNX
+    final_onnx_path = os.path.join(ROOT_DIR, 'models', 'final_model.onnx')
+    export_to_onnx(final_path, final_onnx_path, config, device)
+    
+    if config['wandb']['enabled']:
+        # Log ONNX models as artifacts
+        wandb.save(best_onnx_path)
+        wandb.save(final_onnx_path)
         wandb.finish()
     
     print("-" * 60)
     print(f"Training completed! Best Val Loss: {best_val_loss:.4f}")
+    print(f"Models saved: best_model.pt, final_model.pt, best_model.onnx, final_model.onnx")
     
     return model
+
+
+def export_to_onnx(
+    checkpoint_path: str, 
+    onnx_path: str, 
+    config: dict, 
+    device: torch.device
+):
+    """
+    Export a trained PyTorch model to ONNX format.
+    
+    Args:
+        checkpoint_path: Path to PyTorch checkpoint (.pt)
+        onnx_path: Output path for ONNX model (.onnx)
+        config: Configuration dict
+        device: Torch device
+    """
+    # Load model
+    model = load_model_for_inference(checkpoint_path, config, device)
+    model.eval()
+    
+    # Create dummy input matching the expected shape
+    # Shape: (batch_size, seq_len, num_continuous_features + 1)
+    # +1 for weather_code as last column
+    features_config = config['features']
+    training_config = config['training']
+    
+    num_weather_inputs = len(features_config['inputs']) - 1  # -1 for weather_code
+    num_time_features = 6
+    num_continuous_features = num_weather_inputs + num_time_features
+    total_input_cols = num_continuous_features + 1  # +1 for weather_code
+    
+    seq_len = training_config['seq_len']
+    batch_size = 1  # Use batch_size 1 for ONNX export
+    
+    dummy_input = torch.randn(batch_size, seq_len, total_input_cols).to(device)
+    
+    # Export to ONNX
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_path,
+        export_params=True,
+        opset_version=14,
+        do_constant_folding=True,
+        input_names=['input'],
+        output_names=['output'],
+        dynamic_axes={
+            'input': {0: 'batch_size'},
+            'output': {0: 'batch_size'}
+        }
+    )
+    
+    print(f"  ✓ Exported to {os.path.basename(onnx_path)}")
 
 
 def load_model_for_inference(checkpoint_path: str, config: dict, device: torch.device) -> ExcelFormer:
