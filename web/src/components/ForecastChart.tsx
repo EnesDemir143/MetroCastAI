@@ -1,15 +1,16 @@
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { useWeatherStore } from '../store/useWeatherStore';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+        const data = payload[0].payload;
         return (
             <div className="bg-popover text-popover-foreground px-3 py-2 rounded-md shadow-md border border-border text-xs">
-                <p className="font-semibold mb-1">{label}</p>
+                <p className="font-semibold mb-1">{label} {data.isForecast ? '(Forecast)' : '(History)'}</p>
                 {payload.map((entry: any, index: number) => (
                     <div key={index} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.stroke }}></div>
-                        <span>{entry.value.toFixed(1)}°</span>
+                        <span className="font-medium text-sm">{entry.value.toFixed(1)}°C</span>
                     </div>
                 ))}
             </div>
@@ -19,12 +20,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const ForecastChart = () => {
-    const { predictions, realData, activeTab } = useWeatherStore();
+    const { predictions, inputHistory, activeTab } = useWeatherStore();
 
     // Determine colors based on active activeTab
-    // Temperature: Yellow (#FFD600)
-    // Precipitation: Blue (#3B82F6)
-    // Wind: Green (#22C55E)
     const getConfig = () => {
         switch (activeTab) {
             case 'precipitation': return { color: '#3B82F6', id: 'colorBlue' };
@@ -39,30 +37,49 @@ const ForecastChart = () => {
     // Mock data if no predictions yet
     const mockData = Array.from({ length: 24 }).map((_, i) => ({
         time: `${i}:00`,
-        prediction: activeTab === 'temperature' ? Math.sin(i / 3) * 5 + 15 : Math.random() * 10,
+        temperature: activeTab === 'temperature' ? Math.sin(i / 3) * 5 + 15 : Math.random() * 10,
+        isForecast: true,
     }));
 
     // Prepare data
-    // Note: Improvements would be needed to show actual different data for Rain/Wind if backend supported it
-    let displayData = mockData;
-    if (predictions) {
-        displayData = predictions.map((p, i) => ({
-            time: `${i}:00`,
-            prediction: activeTab === 'temperature' ? p : Math.random() * 20, // Mock other metrics
-            real: realData ? realData[i] : null,
+    let displayData: any[] = [];
+    let forecastStartIndex = -1;
+
+    if (predictions && inputHistory.length >= 24) {
+        // Last 24h History
+        const last24h = inputHistory.slice(-24).map((record: any) => ({
+            time: new Date(record.timestamp).getHours() + ':00',
+            temperature: record.temperature_2m,
+            isForecast: false,
         }));
+
+        forecastStartIndex = last24h.length;
+
+        // Next 24h Forecast
+        const lastTimestamp = inputHistory[inputHistory.length - 1].timestamp;
+        const lastHour = new Date(lastTimestamp).getHours();
+
+        const next24h = predictions.map((p, i) => ({
+            time: ((lastHour + i + 1) % 24) + ':00',
+            temperature: p,
+            isForecast: true,
+        }));
+
+        displayData = [...last24h, ...next24h];
+    } else {
+        displayData = mockData;
     }
 
     return (
-        <div className="w-full h-[250px] relative transition-colors duration-500">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-[250px] min-h-[250px] relative transition-colors duration-500">
+            <ResponsiveContainer width="100%" height="100%" aspect={3}>
                 <AreaChart
                     data={displayData}
                     margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
                     onClick={(e: any) => {
                         if (e && e.activePayload && e.activePayload.length > 0) {
                             const payload = e.activePayload[0].payload;
-                            useWeatherStore.getState().setDisplayedTemp(payload.prediction);
+                            useWeatherStore.getState().setDisplayedTemp(payload.temperature);
                         }
                     }}
                 >
@@ -77,15 +94,24 @@ const ForecastChart = () => {
                         dataKey="time"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                         interval={3}
                     />
                     <YAxis hide domain={['auto', 'auto']} />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '4 4' }} />
 
+                    {forecastStartIndex !== -1 && (
+                        <ReferenceLine
+                            x={displayData[forecastStartIndex]?.time}
+                            stroke="hsl(var(--muted-foreground))"
+                            strokeDasharray="3 3"
+                            label={{ value: 'NOW', position: 'insideTopLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                        />
+                    )}
+
                     <Area
                         type="monotone"
-                        dataKey="prediction"
+                        dataKey="temperature"
                         stroke={color}
                         strokeWidth={3}
                         fill={`url(#${id})`}

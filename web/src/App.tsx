@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useWeatherStore } from './store/useWeatherStore';
 import Header from './components/Header';
 import CurrentWeather from './components/CurrentWeather';
 import WeatherTabs from './components/WeatherTabs';
@@ -7,6 +9,12 @@ import ControlBar from './components/ControlBar';
 import { Card, CardContent } from "@/components/ui/card"
 
 function App() {
+  const fetchSampleData = useWeatherStore((state) => state.fetchSampleData);
+
+  useEffect(() => {
+    fetchSampleData();
+  }, [fetchSampleData]);
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary selection:text-primary-foreground">
       <Header />

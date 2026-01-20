@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = '/api/predict';
 
 export interface WeatherInputRecord {
     timestamp: string; // ISO 8601
@@ -33,6 +33,9 @@ const apiClient = axios.create({
 });
 
 export const predictWeather = async (data: PredictionRequest): Promise<PredictionResponse> => {
-    const response = await apiClient.post<PredictionResponse>('/predict', data);
+    // The proxy rewrite handles adding '/predict' if we use an empty path, 
+    // or we can just call it directly if the proxy target is just the host.
+    // In my vite config, I rewrite /api/predict -> /predict
+    const response = await apiClient.post<PredictionResponse>('', data);
     return response.data;
 };

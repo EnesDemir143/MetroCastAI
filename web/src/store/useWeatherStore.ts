@@ -74,7 +74,12 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
         set({ isLoadingSample: true, error: null });
         try {
             const data = await fetchS3SampleData();
-            set({ inputHistory: data, isLoadingSample: false });
+            // Take last 24h of data for the prediction history
+            const history = data.slice(-24);
+            set({ inputHistory: history, isLoadingSample: false });
+
+            // Automatically get prediction for the loaded data
+            await get().fetchPrediction();
         } catch (err: any) {
             set({
                 error: err.message || 'Failed to fetch sample data',
