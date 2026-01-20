@@ -1,0 +1,178 @@
+# --- Project Configuration ---
+project:
+  name: "MetroCast-AI"
+  description: "Istanbul Weather Forecasting with ExcelFormer"
+
+# --- Training Configuration ---
+training:
+  seed: 42
+  split_ratio:
+    train: 0.80
+    val: 0.10
+    test: 0.10
+    
+  # Training hyperparameters
+  batch_size: 128
+  epochs: 100
+  learning_rate: 0.0001  # Transformer için uygun LR
+  weight_decay: 0.0001
+  seq_len: 24
+  pred_len: 24
+  
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"  # Options: cosine, step, plateau
+    warmup_epochs: 5
+    min_lr: 0.00001
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.0001
+  
+  # Gradient clipping
+  gradient_clip: 1.0
+
+# --- Model Hyperparameters ---
+model:
+  d_model: 128
+  n_heads: 8
+  n_layers: 4
+  d_ff: 512
+  dropout: 0.1
+  weather_code_embed_dim: 8
+  num_weather_codes: 100
+
+# --- WandB Configuration ---
+wandb:
+  enabled: true
+  project: "MetroCast-AI"
+  entity: null  # Your wandb username/team (null = default)
+  run_name: null  # Auto-generated if null
+  tags: ["excelformer", "weather", "istanbul"]
+  log_freq: 10  # Log every N batches
+
+
+# --- Location Settings ---
+location:
+  latitude: 41.0082
+  longitude: 28.9784
+  timezone: "Europe/Istanbul"
+
+# --- Data Fetching & Storage ---
+data:
+  start_date: "2006-01-01"
+  raw_file_path: "data/raw/istanbul_weather.csv"
+  bucket_name: "metrocast-ai-storage"
+
+# --- Model Features ---
+features:
+  target: "temperature_2m"
+  # Feature counts for model
+  # 10 normalized weather + 6 time = 16 continuous features
+  # weather_code is embedded separately (not counted here)
+  num_continuous_features: 16
+  weather_code_embed_dim: 8   # Embedding dimension for categorical weather code
+  num_weather_codes: 100      # WMO codes range 0-99
+  inputs:
+    - "temperature_2m"
+    - "relative_humidity_2m"
+    - "dew_point_2m"
+    - "surface_pressure"
+    - "precipitation"
+    - "weather_code"
+    - "cloud_cover"
+    - "shortwave_radiation"
+    - "wind_speed_10m"
+    - "wind_direction_10m"
+    - "soil_temperature_0_to_7cm"
+
+# --- WMO Weather Interpretation Codes ---
+# Source: https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
+# Icons from OpenWeatherMap (standardized by WMO)
+weather_codes:
+  0:
+    day: { description: "Sunny", image: "http://openweathermap.org/img/wn/01d@2x.png" }
+    night: { description: "Clear", image: "http://openweathermap.org/img/wn/01n@2x.png" }
+  1:
+    day: { description: "Mainly Sunny", image: "http://openweathermap.org/img/wn/01d@2x.png" }
+    night: { description: "Mainly Clear", image: "http://openweathermap.org/img/wn/01n@2x.png" }
+  2:
+    day: { description: "Partly Cloudy", image: "http://openweathermap.org/img/wn/02d@2x.png" }
+    night: { description: "Partly Cloudy", image: "http://openweathermap.org/img/wn/02n@2x.png" }
+  3:
+    day: { description: "Cloudy", image: "http://openweathermap.org/img/wn/03d@2x.png" }
+    night: { description: "Cloudy", image: "http://openweathermap.org/img/wn/03n@2x.png" }
+  45:
+    day: { description: "Foggy", image: "http://openweathermap.org/img/wn/50d@2x.png" }
+    night: { description: "Foggy", image: "http://openweathermap.org/img/wn/50n@2x.png" }
+  48:
+    day: { description: "Rime Fog", image: "http://openweathermap.org/img/wn/50d@2x.png" }
+    night: { description: "Rime Fog", image: "http://openweathermap.org/img/wn/50n@2x.png" }
+  51:
+    day: { description: "Light Drizzle", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Light Drizzle", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  53:
+    day: { description: "Drizzle", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Drizzle", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  55:
+    day: { description: "Heavy Drizzle", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Heavy Drizzle", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  56:
+    day: { description: "Light Freezing Drizzle", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Light Freezing Drizzle", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  57:
+    day: { description: "Freezing Drizzle", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Freezing Drizzle", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  61:
+    day: { description: "Light Rain", image: "http://openweathermap.org/img/wn/10d@2x.png" }
+    night: { description: "Light Rain", image: "http://openweathermap.org/img/wn/10n@2x.png" }
+  63:
+    day: { description: "Rain", image: "http://openweathermap.org/img/wn/10d@2x.png" }
+    night: { description: "Rain", image: "http://openweathermap.org/img/wn/10n@2x.png" }
+  65:
+    day: { description: "Heavy Rain", image: "http://openweathermap.org/img/wn/10d@2x.png" }
+    night: { description: "Heavy Rain", image: "http://openweathermap.org/img/wn/10n@2x.png" }
+  66:
+    day: { description: "Light Freezing Rain", image: "http://openweathermap.org/img/wn/10d@2x.png" }
+    night: { description: "Light Freezing Rain", image: "http://openweathermap.org/img/wn/10n@2x.png" }
+  67:
+    day: { description: "Freezing Rain", image: "http://openweathermap.org/img/wn/10d@2x.png" }
+    night: { description: "Freezing Rain", image: "http://openweathermap.org/img/wn/10n@2x.png" }
+  71:
+    day: { description: "Light Snow", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Light Snow", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  73:
+    day: { description: "Snow", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Snow", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  75:
+    day: { description: "Heavy Snow", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Heavy Snow", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  77:
+    day: { description: "Snow Grains", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Snow Grains", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  80:
+    day: { description: "Light Showers", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Light Showers", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  81:
+    day: { description: "Showers", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Showers", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  82:
+    day: { description: "Heavy Showers", image: "http://openweathermap.org/img/wn/09d@2x.png" }
+    night: { description: "Heavy Showers", image: "http://openweathermap.org/img/wn/09n@2x.png" }
+  85:
+    day: { description: "Light Snow Showers", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Light Snow Showers", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  86:
+    day: { description: "Snow Showers", image: "http://openweathermap.org/img/wn/13d@2x.png" }
+    night: { description: "Snow Showers", image: "http://openweathermap.org/img/wn/13n@2x.png" }
+  95:
+    day: { description: "Thunderstorm", image: "http://openweathermap.org/img/wn/11d@2x.png" }
+    night: { description: "Thunderstorm", image: "http://openweathermap.org/img/wn/11n@2x.png" }
+  96:
+    day: { description: "Light Thunderstorms With Hail", image: "http://openweathermap.org/img/wn/11d@2x.png" }
+    night: { description: "Light Thunderstorms With Hail", image: "http://openweathermap.org/img/wn/11n@2x.png" }
+  99:
+    day: { description: "Thunderstorm With Hail", image: "http://openweathermap.org/img/wn/11d@2x.png" }
+    night: { description: "Thunderstorm With Hail", image: "http://openweathermap.org/img/wn/11n@2x.png" }
