@@ -12,7 +12,7 @@ training:
     test: 0.10
     
   # Training hyperparameters
-  batch_size: 32
+  batch_size: 128
   epochs: 100
   learning_rate: 0.0001  # Transformer için uygun LR
   weight_decay: 0.0001
