@@ -4,9 +4,15 @@ from datetime import datetime
 import os
 import sys
 import pathlib
+import yaml
 
 root_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(str(root_dir))
+
+CONFIG_PATH = os.path.join(root_dir, 'config.yaml')
+
+with open(CONFIG_PATH, 'r') as f:
+    config = yaml.safe_load(f)
 
 from src.utils.logger import setup_logger
 from src.utils.s3_client import upload_to_s3
@@ -14,12 +20,15 @@ from src.utils.s3_client import upload_to_s3
 # Setup logger
 logger = setup_logger('fetch_data', 'logs/fetch_data.log')
 
-LAT = 41.0082
-LON = 28.9784
-START_DATE = "2006-01-01" 
+LAT = config['location']['latitude']
+LON = config['location']['longitude']
+TIME_ZONE=config['location']['timezone']
+START_DATE = config['data']['start_date'] 
 END_DATE = datetime.now().strftime("%Y-%m-%d")
-FILE_PATH=r"data/raw/istanbul_weather.csv"
-BUCKET_NAME = "metrocast-ai-storage"
+FILE_PATH=config['data']['raw_file_path']
+BUCKET_NAME = config['data']['bucket_name']
+
+HOURLY_PARAMS = config['features']['inputs']
 
 def main():
     logger.info(f"Data Fetching ({START_DATE} - {END_DATE})...")
@@ -28,55 +37,12 @@ def main():
     url = "https://archive-api.open-meteo.com/v1/archive"
 
     params = {
-        "latitude": LAT,
-        "longitude": LON,
-        "start_date": START_DATE,
-        "end_date": END_DATE,
-        "hourly": [
-            # -- Fundamental Data --
-            "temperature_2m",
-            "relative_humidity_2m",
-            "dew_point_2m",          
-            "apparent_temperature",  
-            "pressure_msl",          
-            "surface_pressure",
-            
-            # -- Precipitation Data --
-            "precipitation",
-            "rain",                  
-            "snowfall",              
-            "weather_code",          
-            
-            # -- Cloud and Sun Data --
-            "cloud_cover",
-            "cloud_cover_low",       
-            "cloud_cover_mid",       
-            "cloud_cover_high",      
-            "shortwave_radiation",   
-            "diffuse_radiation",     
-            
-            # -- Wind Data --
-            "wind_speed_10m",
-            "wind_direction_10m",    
-            "wind_gusts_10m",        
-            "wind_speed_100m",       
-            "wind_direction_100m",   
-            
-            # -- Soil Data --
-            "soil_temperature_0cm",       
-            "soil_temperature_18cm",      
-            "soil_moisture_0_to_7cm",     
-            "et0_fao_evapotranspiration",
-            
-            # -- Atmospheric Data --
-            "temperature_850hPa",           
-            "temperature_500hPa",           
-            "geopotential_height_500hPa",   
-            "relative_humidity_850hPa",     
-            "wind_speed_850hPa",            
-            "wind_direction_850hPa"         
-        ],
-        "timezone": "auto"
+    "latitude": LAT,
+    "longitude": LON,
+    "start_date": START_DATE,
+    "end_date": END_DATE,
+    "hourly": HOURLY_PARAMS,
+    "timezone": TIME_ZONE    
     }
 
     try:
