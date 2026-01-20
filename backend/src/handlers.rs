@@ -20,6 +20,18 @@ pub struct AppState {
 /// 3. Run ONNX model inference
 /// 4. Denormalize output (predicted temperature)
 /// 5. Return JSON response
+/// 5. Return JSON response
+#[utoipa::path(
+    post,
+    path = "/predict",
+    tag = "prediction",
+    request_body = PredictionRequest,
+    responses(
+        (status = 200, description = "Prediction successful", body = PredictionResponse),
+        (status = 400, description = "Invalid input data"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn predict(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<PredictionRequest>,

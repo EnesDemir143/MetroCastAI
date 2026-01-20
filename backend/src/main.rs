@@ -3,12 +3,31 @@ mod inference;
 mod preprocess;
 mod schemas;
 
-use axum::{routing::post, Router};
+use axum::{routing::{get, post}, Router};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
+use tower_http::trace::TraceLayer;
 
 use handlers::AppState;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(handlers::predict),
+    components(
+        schemas(
+            schemas::PredictionRequest,
+            schemas::WeatherInputRecord,
+            schemas::PredictionResponse
+        )
+    ),
+    tags(
+        (name = "prediction", description = "Prediction endpoints")
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
@@ -45,9 +64,13 @@ async fn main() {
     });
 
     // App router
-    let app = Router::new()
+let app = Router::new()
+        .route("/", get(|| async { "Metrocast API v1.0 is running." }))
+        .route("/health", get(|| async { "OK" }))
         .route("/predict", post(handlers::predict))
         .layer(CorsLayer::permissive())
+        .layer(TraceLayer::new_for_http())
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .with_state(state);
 
     let addr = "0.0.0.0:3000";

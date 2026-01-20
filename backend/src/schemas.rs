@@ -1,13 +1,14 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct PredictionRequest {
     /// Exactly 24 hourly records of recent history
     pub recent_history: Vec<WeatherInputRecord>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct WeatherInputRecord {
     pub timestamp: DateTime<Utc>,
     pub temperature_2m: f32,
@@ -24,7 +25,7 @@ pub struct WeatherInputRecord {
     pub weather_code: f32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PredictionResponse {
     /// 24 predicted hourly temperatures in Celsius
     pub predictions: Vec<f32>,
