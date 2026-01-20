@@ -96,6 +96,8 @@ pub struct WeatherRecord {
     pub wind_speed_10m: f32,
     pub wind_direction_10m: f32,
     pub soil_temperature_0_to_7cm: f32,
+    /// WMO weather code (0-99) - NOT normalized, passed through embedding layer
+    pub weather_code: f32,
 }
 
 impl WeatherRecord {
@@ -115,28 +117,30 @@ impl WeatherRecord {
         ]
     }
 
-    /// Get all 16 features (10 weather + 6 time encodings) in order
-    pub fn all_features(&self) -> [f32; 16] {
+    /// Get all 17 features (10 weather + 6 time encodings + 1 weather_code) in order
+    /// Note: weather_code is last and NOT normalized (handled by embedding layer)
+    pub fn all_features(&self) -> [f32; 17] {
         let weather = self.weather_features();
         let time = TimeEncoding::from_datetime(&self.timestamp).to_array();
 
         [
-            weather[0],
-            weather[1],
-            weather[2],
-            weather[3],
-            weather[4],
-            weather[5],
-            weather[6],
-            weather[7],
-            weather[8],
-            weather[9],
-            time[0],
-            time[1],
-            time[2],
-            time[3],
-            time[4],
-            time[5],
+            weather[0],  // temperature_2m
+            weather[1],  // relative_humidity_2m
+            weather[2],  // dew_point_2m
+            weather[3],  // surface_pressure
+            weather[4],  // precipitation
+            weather[5],  // cloud_cover
+            weather[6],  // shortwave_radiation
+            weather[7],  // wind_speed_10m
+            weather[8],  // wind_direction_10m
+            weather[9],  // soil_temperature_0_to_7cm
+            time[0],     // hour_sin
+            time[1],     // hour_cos
+            time[2],     // day_sin
+            time[3],     // day_cos 
+            time[4],     // month_sin
+            time[5],     // month_cos
+            self.weather_code, // NOT normalized - raw WMO code
         ]
     }
 }
@@ -147,25 +151,31 @@ pub fn normalize(value: f32, mean: f32, std: f32) -> f32 {
     (value - mean) / std
 }
 
-/// Normalize an entire feature vector using statistics
-pub fn normalize_features(features: &[f32; 16], stats: &Statistics) -> [f32; 16] {
-    let mut normalized = [0.0f32; 16];
+/// Normalize the first 16 features using statistics
+/// weather_code (index 16) is NOT normalized - it goes through embedding
+pub fn normalize_features(features: &[f32; 17], stats: &Statistics) -> [f32; 17] {
+    let mut normalized = [0.0f32; 17];
+    // Normalize first 16 features (continuous)
     for i in 0..16 {
         normalized[i] = normalize(features[i], stats.mean[i], stats.std[i]);
     }
+    // Keep weather_code as-is (will be embedded by model)
+    normalized[16] = features[16];
     normalized
 }
 
 /// Preprocess a sequence of 24 weather records into model input tensor.
 ///
-/// Returns `Array3<f32>` with shape (1, 24, 16):
+/// Returns `Array3<f32>` with shape (1, 24, 17):
 /// - 1 = batch size
 /// - 24 = sequence length (hours)
-/// - 16 = feature count (10 weather + 6 time encodings)
+/// - 17 = feature count (10 weather + 6 time encodings + 1 weather_code)
+///
+/// Note: First 16 features are normalized, weather_code (index 16) is raw.
 ///
 /// # Arguments
 /// * `records` - Exactly 24 WeatherRecord entries (one per hour)
-/// * `stats` - Statistics for normalization
+/// * `stats` - Statistics for normalization (must have 16 entries)
 ///
 /// # Errors
 /// Returns error if records length is not 24
@@ -174,7 +184,7 @@ pub fn preprocess_sequence(
     stats: &Statistics,
 ) -> Result<Array3<f32>, PreprocessError> {
     const SEQ_LEN: usize = 24;
-    const NUM_FEATURES: usize = 16;
+    const NUM_FEATURES: usize = 17; // 16 normalized + 1 weather_code
 
     if records.len() != SEQ_LEN {
         return Err(PreprocessError::InvalidSequenceLength {
@@ -183,14 +193,18 @@ pub fn preprocess_sequence(
         });
     }
 
-    if stats.num_features() != NUM_FEATURES {
+    // stats should have 16 entries (for normalized features)
+    // output tensor has 17 features (16 normalized + 1 raw weather_code)
+    const NORMALIZED_FEATURES: usize = 16;
+
+    if stats.num_features() != NORMALIZED_FEATURES {
         return Err(PreprocessError::InvalidFeatureCount {
-            expected: NUM_FEATURES,
+            expected: NORMALIZED_FEATURES,
             got: stats.num_features(),
         });
     }
 
-    // Create tensor with shape (1, 24, 16)
+    // Create tensor with shape (1, 24, 17)
     let mut tensor = Array3::<f32>::zeros((1, SEQ_LEN, NUM_FEATURES));
 
     for (t, record) in records.iter().enumerate() {
@@ -293,6 +307,7 @@ mod tests {
             wind_speed_10m: 15.0,
             wind_direction_10m: 180.0,
             soil_temperature_0_to_7cm: 8.0,
+            weather_code: 3.0, // Cloudy
         };
 
         let features = record.weather_features();
@@ -324,12 +339,13 @@ mod tests {
                     wind_speed_10m: 15.0,
                     wind_direction_10m: 180.0,
                     soil_temperature_0_to_7cm: 8.0,
+                    weather_code: 0.0, // Sunny
                 }
             })
             .collect();
 
         let tensor = preprocess_sequence(&records, &stats).unwrap();
-        assert_eq!(tensor.shape(), &[1, 24, 16]);
+        assert_eq!(tensor.shape(), &[1, 24, 17]); // 16 normalized + 1 weather_code
     }
 
     #[test]
