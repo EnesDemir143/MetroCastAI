@@ -1,4 +1,4 @@
-import { Info, Cpu, Database, ThermometerSun, Zap } from 'lucide-react';
+import { Info, Cpu, Database, Zap } from 'lucide-react';
 import { useWeatherStore } from '@/store/useWeatherStore';
 import { translations } from '@/utils/translations';
 

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useWeatherStore } from '@/store/useWeatherStore';
 import { translations } from '@/utils/translations';
-import { LineChart as LucideLineChart, Activity, Cpu, BookOpen, TrendingDown, History, Info, Timer, Zap, CheckCircle2, Image as ImageIcon, BarChart3, X, Maximize2, Layers } from 'lucide-react';
+import { LineChart as LucideLineChart, Activity, Cpu, BookOpen, TrendingDown, History, Info, Zap, CheckCircle2, Image as ImageIcon, BarChart3, X, Maximize2, Layers } from 'lucide-react';
 import { fetchLatestWandBRun, fetchRunHistory, type WandBRunMetrics, type WandBHistoryPoint } from '@/services/wandbService';
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 const IntelligenceConsole = () => {
     const { language } = useWeatherStore();
@@ -34,12 +34,6 @@ const IntelligenceConsole = () => {
         }
     }, [entity, project, apiKey]);
 
-    const formatDuration = (seconds: number | null) => {
-        if (!seconds) return '---';
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-    };
 
     const architecture = [
         { label: 'Model', value: 'ExcelFormer', desc: 'Custom Transformer' },
