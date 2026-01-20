@@ -5,12 +5,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="bg-popover text-popover-foreground px-3 py-2 rounded-md shadow-md border border-border text-xs">
-                <p className="font-semibold mb-1">{label} {data.isForecast ? '(Forecast)' : '(History)'}</p>
+            <div className="glass-darker px-4 py-3 rounded-2xl border-white/[0.1] shadow-2xl backdrop-blur-2xl">
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 border-b border-white/[0.05] pb-1.5">
+                    {label} • {data.isForecast ? 'Forecast' : 'History'}
+                </p>
                 {payload.map((entry: any, index: number) => (
-                    <div key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.stroke }}></div>
-                        <span className="font-medium text-sm">{entry.value.toFixed(1)}°C</span>
+                    <div key={index} className="flex items-center gap-2.5">
+                        <div className="h-2 w-2 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)]" style={{ backgroundColor: entry.stroke }}></div>
+                        <span className="text-xl font-black tracking-tighter text-white">{entry.value.toFixed(1)}°C</span>
                     </div>
                 ))}
             </div>
@@ -21,8 +23,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const ForecastChart = () => {
     const { predictions, inputHistory } = useWeatherStore();
-    const color = '#FFD600'; // Always yellow for temperature
-    const id = 'colorYellow';
+    const color = 'hsl(var(--primary))';
+    const id = 'colorAzure';
 
     // Mock data if no predictions yet
     const mockData = Array.from({ length: 24 }).map((_, i) => ({
@@ -61,11 +63,11 @@ const ForecastChart = () => {
     }
 
     return (
-        <div className="w-full h-[250px] min-h-[250px] relative transition-colors duration-500">
-            <ResponsiveContainer width="100%" height="100%" aspect={3}>
+        <div className="w-full h-[320px] relative mt-4">
+            <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={displayData}
-                    margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
                     onClick={(e: any) => {
                         if (e && e.activePayload && e.activePayload.length > 0) {
                             const payload = e.activePayload[0].payload;
@@ -75,27 +77,38 @@ const ForecastChart = () => {
                 >
                     <defs>
                         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                            <stop offset="5%" stopColor={color} stopOpacity={0.25} />
                             <stop offset="95%" stopColor={color} stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" strokeDasharray="0" />
                     <XAxis
                         dataKey="time"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 600 }}
                         interval={3}
+                        dy={15}
                     />
                     <YAxis hide domain={['auto', 'auto']} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                    />
 
                     {forecastStartIndex !== -1 && (
                         <ReferenceLine
                             x={displayData[forecastStartIndex]?.time}
-                            stroke="hsl(var(--muted-foreground))"
-                            strokeDasharray="3 3"
-                            label={{ value: 'NOW', position: 'insideTopLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                            stroke="rgba(255,255,255,0.2)"
+                            strokeDasharray="4 4"
+                            label={{
+                                value: 'FORECAST',
+                                position: 'insideTopLeft',
+                                fill: 'rgba(255,255,255,0.4)',
+                                fontSize: 9,
+                                fontWeight: 800,
+                                letterSpacing: '0.1em'
+                            }}
                         />
                     )}
 
@@ -103,11 +116,18 @@ const ForecastChart = () => {
                         type="monotone"
                         dataKey="temperature"
                         stroke={color}
-                        strokeWidth={3}
+                        strokeWidth={4}
                         fill={`url(#${id})`}
-                        activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-                        animationDuration={1000}
+                        filter="url(#glow)"
+                        activeDot={{ r: 6, fill: '#fff', stroke: color, strokeWidth: 2 }}
+                        animationDuration={1500}
                     />
+
+                    {/* SVG Filter for stroke glow */}
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
                 </AreaChart>
             </ResponsiveContainer>
         </div>

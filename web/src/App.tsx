@@ -8,52 +8,71 @@ import DailyForecast from './components/DailyForecast';
 import ControlBar from './components/ControlBar';
 import ProjectInfo from './components/ProjectInfo';
 import RequestBuilder from './components/RequestBuilder';
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Settings2 } from 'lucide-react'
+import { translations } from './utils/translations';
 
 function App() {
-  const fetchSampleData = useWeatherStore((state) => state.fetchSampleData);
+  const { fetchSampleData, language } = useWeatherStore();
   const [showRequestBuilder, setShowRequestBuilder] = useState(false);
+  const t = translations[language];
 
   useEffect(() => {
     fetchSampleData();
   }, [fetchSampleData]);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen font-sans selection:bg-primary/30 antialiased">
       <Header />
 
-      <main className="container mx-auto py-6 px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="container mx-auto py-10 px-6 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
           {/* Left Column - Dashboard & Controls */}
-          <div className="lg:col-span-8 space-y-8">
-            <Card className="border-none shadow-none bg-transparent">
-              <CardContent className="p-0 space-y-8">
-                <CurrentWeather />
-                <div className="space-y-4">
+          <div className="lg:col-span-8 space-y-12">
+            <div className="space-y-12">
+              <CurrentWeather />
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 ml-2">
+                  <div className="h-4 w-1 bg-primary rounded-full shadow-[0_0_10px_rgba(56,189,248,0.5)]"></div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.hourlyForecast}</h3>
+                </div>
+                <div className="glass rounded-[2.5rem] p-8 border-white/[0.05]">
                   <WeatherTabs />
                   <ForecastChart />
                 </div>
-                <DailyForecast />
-              </CardContent>
-            </Card>
+              </div>
 
-            <div className="pt-8 border-t border-border/50 space-y-4 text-center">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-1 bg-zinc-700 rounded-full"></div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.forecast}</h3>
+                  </div>
+                </div>
+                <DailyForecast />
+              </div>
+            </div>
+
+            <div className="pt-4 space-y-8 flex flex-col items-center">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setShowRequestBuilder(!showRequestBuilder)}
-                className="gap-2 rounded-full px-6 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs"
+                className={`group gap-3 rounded-full px-8 h-12 glass border-white/[0.05] hover:border-primary/50 transition-all duration-500 hover:bg-primary/5 ${showRequestBuilder ? 'border-primary/40 bg-primary/5' : ''}`}
               >
-                <Settings2 className={`h-3 w-3 ${showRequestBuilder ? 'text-primary' : ''}`} />
-                {showRequestBuilder ? 'Hide Advanced Simulation' : 'Show Advanced Simulation & Parameters'}
-                <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${showRequestBuilder ? 'rotate-180' : ''}`} />
+                <div className={`p-1.5 rounded-lg transition-colors ${showRequestBuilder ? 'bg-primary/20' : 'bg-white/5 group-hover:bg-primary/10'}`}>
+                  <Settings2 className={`h-3.5 w-3.5 ${showRequestBuilder ? 'text-primary' : 'text-zinc-500 group-hover:text-primary'}`} />
+                </div>
+                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${showRequestBuilder ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                  {showRequestBuilder ? 'Hide Advanced Console' : 'Open Developer Console'}
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-500 ${showRequestBuilder ? 'rotate-180 text-primary' : 'text-zinc-600'}`} />
               </Button>
 
               {showRequestBuilder && (
-                <div className="text-left animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-700 ease-out">
                   <RequestBuilder />
                 </div>
               )}
@@ -63,12 +82,22 @@ function App() {
           </div>
 
           {/* Right Column - Project Info */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24">
+            <div className="flex items-center gap-3 ml-2">
+              <div className="h-4 w-1 bg-zinc-700 rounded-full"></div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.projectInfo}</h3>
+            </div>
             <ProjectInfo />
           </div>
 
         </div>
       </main>
+
+      {/* Decorative background glow */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]"></div>
+      </div>
     </div>
   );
 }

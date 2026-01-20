@@ -4,45 +4,59 @@
 
 @layer base {
   :root {
-    /* Google Dark Theme */
-    --background: 220 2% 14%;
-    /* #202124 Charcoal */
-    --foreground: 0 0% 100%;
+    --background: 222 47% 4%;
+    --foreground: 214 32% 91%;
 
-    --card: 220 2% 14%;
-    --card-foreground: 0 0% 100%;
+    --card: 222 47% 6%;
+    --card-foreground: 214 32% 91%;
 
-    --popover: 220 2% 20%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 214 32% 91%;
 
-    --primary: 47 100% 50%;
-    /* #FFD600 Google Weather Yellow */
-    --primary-foreground: 220 2% 14%;
+    --primary: 199 89% 48%;
+    /* Bright Azure */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 218 11% 65%;
-    /* Muted text */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 214 32% 91%;
 
-    --muted: 220 2% 25%;
-    --muted-foreground: 218 11% 65%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 16% 65%;
 
-    --accent: 47 100% 50%;
-    --accent-foreground: 220 2% 14%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 214 32% 91%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 2% 25%;
-    --input: 220 2% 25%;
-    --ring: 47 100% 50%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 199 89% 48%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
   }
 }
 
 @layer utilities {
-  .google-chart-gradient {
-    background: linear-gradient(180deg, rgba(255, 214, 0, 0.2) 0%, rgba(255, 214, 0, 0) 100%);
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-2xl;
+  }
+
+  .glass-darker {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/[0.05] shadow-2xl;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+  }
+
+  .bg-mesh {
+    background-color: hsla(222, 47%, 4%, 1);
+    background-image:
+      radial-gradient(at 0% 0%, hsla(217, 91%, 60%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(199, 89%, 48%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(217, 91%, 60%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(199, 89%, 48%, 0.1) 0px, transparent 50%);
   }
 }
 
@@ -52,7 +66,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground bg-mesh min-h-screen antialiased selection:bg-primary/30;
   }
 }
 

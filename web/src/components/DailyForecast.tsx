@@ -57,7 +57,7 @@ const DailyForecast = () => {
     const forecastData = getForecastBlocks();
 
     return (
-        <div className="flex items-center justify-start w-full overflow-x-auto py-4 gap-4 no-scrollbar">
+        <div className="flex items-center justify-start w-full overflow-x-auto py-2 gap-4 no-scrollbar">
             {forecastData.map((day, i) => (
                 <div
                     key={i}
@@ -67,16 +67,31 @@ const DailyForecast = () => {
                             setSelectedDayIndex(i);
                         }
                     }}
-                    className={`flex flex-col items-center justify-center min-w-[100px] p-3 rounded-xl gap-2 cursor-pointer transition-all hover:scale-105 border 
+                    className={`group relative flex flex-col items-center justify-center min-w-[120px] p-5 rounded-[1.5rem] gap-3 cursor-pointer transition-all duration-300 border
                         ${i === selectedDayIndex
-                            ? 'bg-muted/60 border-primary/50 shadow-sm'
-                            : 'bg-muted/10 border-transparent hover:bg-muted/20'}`}
+                            ? 'glass-darker border-primary/50 shadow-[0_0_20px_rgba(56,189,248,0.15)]'
+                            : 'glass border-white/[0.05] hover:border-white/20 hover:bg-white/[0.05]'}`}
                 >
-                    <span className="text-sm font-medium text-muted-foreground">{day.day}</span>
-                    <div className="py-1">{day.icon}</div>
-                    <div className="flex gap-2 text-sm">
-                        <span className="font-bold text-foreground">{day.max}°</span>
-                        <span className="text-muted-foreground">{day.min}°</span>
+                    {i === selectedDayIndex && (
+                        <div className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
+                    )}
+
+                    <span className={`text-[11px] font-bold uppercase tracking-widest transition-colors
+                        ${i === selectedDayIndex ? 'text-primary' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                        {day.day}
+                    </span>
+
+                    <div className={`p-2 rounded-2xl transition-all duration-300 
+                        ${i === selectedDayIndex ? 'bg-primary/10 scale-110' : 'bg-white/5 opacity-70 group-hover:opacity-100 group-hover:scale-105'}`}>
+                        {day.icon}
+                    </div>
+
+                    <div className="flex flex-col items-center gap-0.5">
+                        <span className={`text-xl font-black tracking-tighter transition-colors
+                            ${i === selectedDayIndex ? 'text-white' : 'text-white/80'}`}>
+                            {day.max}°
+                        </span>
+                        <span className="text-[10px] font-bold text-zinc-500">{day.min}°</span>
                     </div>
                 </div>
             ))}
