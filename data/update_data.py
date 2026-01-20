@@ -37,7 +37,7 @@ def main():
 
     if not os.path.exists(FILE_PATH):
         logger.info(f"File not found at {FILE_PATH}. Downloading from S3...")
-        download_from_s3(FILE_PATH, BUCKET_NAME)
+        download_from_s3(FILE_PATH, BUCKET_NAME, logger)
 
     try:
         # Load existing data

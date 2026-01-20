@@ -4,7 +4,7 @@ from tqdm import tqdm
 from botocore.exceptions import NoCredentialsError
 import hashlib
 
-def download_from_s3(file_path, bucket_name):
+def download_from_s3(file_path, bucket_name, logger):
     s3 = boto3.client('s3')
     try:
         logger.info(f"Downloading {file_path} from S3...")
