@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Header from './components/Header';
+import CurrentWeather from './components/CurrentWeather';
+import WeatherTabs from './components/WeatherTabs';
+import ForecastChart from './components/ForecastChart';
+import DailyForecast from './components/DailyForecast';
+import ControlBar from './components/ControlBar';
+import { Card, CardContent } from "@/components/ui/card"
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary selection:text-primary-foreground">
+      <Header />
+
+      <main className="container max-w-3xl mx-auto py-6 px-4 space-y-6">
+
+        {/* Main Weather Card */}
+        <Card className="border-none shadow-none bg-transparent">
+          <CardContent className="p-0 space-y-8">
+            <CurrentWeather />
+            <div className="space-y-4">
+              <WeatherTabs />
+              <ForecastChart />
+            </div>
+            <DailyForecast />
+          </CardContent>
+        </Card>
+
+        {/* Action Bar */}
+        <ControlBar />
+
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
