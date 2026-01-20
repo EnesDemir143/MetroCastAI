@@ -1,14 +1,26 @@
 import requests
 import pandas as pd
 from datetime import datetime
+import os
+import sys
+import pathlib
+
+root_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(str(root_dir))
+
+from src.utils.logger import setup_logger
+
+# Setup logger
+logger = setup_logger('fetch_data', 'logs/fetch_data.log')
 
 LAT = 41.0082
 LON = 28.9784
 START_DATE = "2006-01-01" 
 END_DATE = datetime.now().strftime("%Y-%m-%d")
+FILE_PATH=r"data/raw/istanbul_weather.csv"
 
-print(f"Data Fetching ({START_DATE} - {END_DATE})...")
-print("This may take 10-20 seconds due to the amount of data, please wait.")
+logger.info(f"Data Fetching ({START_DATE} - {END_DATE})...")
+logger.info("This may take 10-20 seconds due to the amount of data if not already downloaded, please wait.")
 
 url = "https://archive-api.open-meteo.com/v1/archive"
 
@@ -65,20 +77,23 @@ params = {
 }
 
 try:
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    data = response.json()
+    if os.path.exists(FILE_PATH):
+        logger.info("File already exists. Skipping download.")
+        df = pd.read_csv(FILE_PATH)
+    else:
+        # Ensure directory exists before saving
+        os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
+        
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
 
-    df = pd.DataFrame(data['hourly'])
+        df = pd.DataFrame(data['hourly'])
+        df.to_csv(FILE_PATH, index=False)
 
-    filename = "data/raw/istanbul_weather.csv"
-    df.to_csv(filename, index=False)
-
-    print("Process completed.")
-    print(f"File: {filename}")
-    print(f"Total Columns: {len(df.columns)}")
-    print("-" * 30)
-    print("This dataset will enable the ExcelFormer model to learn atmospheric movements.")
+    logger.info("Process completed.")
+    logger.info(f"File: {FILE_PATH}")
+    
 
 except Exception as e:
-    print(f"Error: {e}")
+    logger.error(f"Error: {e}")
