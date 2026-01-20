@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import os
 import pandas as pd
+import numpy as np
 
 class WeatherDataset(Dataset):
     def __init__(self, file_path, stats_path, seq_len=24, pred_len=24, target_col='temperature_2m'):
