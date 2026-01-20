@@ -33,6 +33,12 @@ data:
 # --- Model Features ---
 features:
   target: "temperature_2m"
+  # Feature counts for model
+  # 10 normalized weather + 6 time = 16 continuous features
+  # weather_code is embedded separately (not counted here)
+  num_continuous_features: 16
+  weather_code_embed_dim: 8   # Embedding dimension for categorical weather code
+  num_weather_codes: 100      # WMO codes range 0-99
   inputs:
     - "temperature_2m"
     - "relative_humidity_2m"

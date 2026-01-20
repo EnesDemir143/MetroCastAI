@@ -21,8 +21,12 @@ def preprocess_and_split():
     df['month_cos'] = np.cos(2 * np.pi * (df['time'].dt.month - 1) / 12)
     
     target_col = config['features']['target']
-    # Include target_col in the columns to calculate stats for
-    input_cols = [c for c in df.columns if c != 'time']
+    # Exclude weather_code from normalization (it's categorical)
+    exclude_from_norm = ['time', 'weather_code']
+    input_cols = [c for c in df.columns if c not in exclude_from_norm]
+    
+    # Keep weather_code separately (not normalized)
+    all_cols = input_cols + ['weather_code'] if 'weather_code' in df.columns else input_cols
     
     total_len = len(df)
     train_ratio = config['training']['split_ratio']['train'] 
@@ -39,10 +43,18 @@ def preprocess_and_split():
     std = train_df[input_cols].std().values
     std[std == 0] = 1.0 
     
-    stats = {'mean': mean, 'std': std, 'input_cols': input_cols}
+    stats = {
+        'mean': mean, 
+        'std': std, 
+        'input_cols': input_cols,  # Columns that are normalized
+        'all_cols': all_cols,       # All columns including weather_code
+        'exclude_from_norm': ['weather_code']  # Columns not normalized
+    }
     np.save(os.path.join(root_dir, 'data/processed/statistics.npy'), stats)
     
     print(f"Split Tamamlandı: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    print(f"Normalize edilen sütunlar: {len(input_cols)}")
+    print(f"Normalize edilmeyen: weather_code")
     return train_df, val_df, test_df
 
 if __name__ == "__main__":

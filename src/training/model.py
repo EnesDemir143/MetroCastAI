@@ -137,8 +137,9 @@ class ExcelFormer(nn.Module):
     future values. It uses self-attention to capture temporal dependencies.
     
     Args:
-        num_weather_features: Number of weather input features (e.g., temperature, humidity, etc.)
-        num_time_features: Number of time component features (sin/cos encodings for hour, day, month, etc.)
+        num_continuous_features: Number of continuous input features (weather + time, excluding weather_code)
+        num_weather_codes: Number of unique weather codes for embedding (default: 100 for WMO codes 0-99)
+        weather_code_embed_dim: Dimension of weather code embedding (default: 8)
         d_model: Model dimension (default: 128)
         n_heads: Number of attention heads (default: 8)
         n_layers: Number of transformer blocks (default: 4)
@@ -148,13 +149,15 @@ class ExcelFormer(nn.Module):
         dropout: Dropout probability (default: 0.1)
         
     Note:
-        Total input dimension (num_features) = num_weather_features + num_time_features
+        Input tensor format: [...continuous_features, weather_code]
+        weather_code should be the LAST column as integer indices
     """
     
     def __init__(
         self,
-        num_weather_features: int = 11,
-        num_time_features: int = 6,  # Sin/Cos for hour, day_of_week, month = 3 * 2 = 6
+        num_continuous_features: int = 16,  # 10 weather (excl. weather_code) + 6 time features
+        num_weather_codes: int = 100,        # WMO codes range from 0-99
+        weather_code_embed_dim: int = 8,     # Embedding dimension for weather code
         d_model: int = 128,
         n_heads: int = 8,
         n_layers: int = 4,
@@ -166,16 +169,25 @@ class ExcelFormer(nn.Module):
         super().__init__()
         
         # Feature dimensions
-        self.num_weather_features = num_weather_features
-        self.num_time_features = num_time_features
-        self.num_features = num_weather_features + num_time_features  # Total input dimension
+        self.num_continuous_features = num_continuous_features
+        self.num_weather_codes = num_weather_codes
+        self.weather_code_embed_dim = weather_code_embed_dim
+        
+        # Total input to transformer = continuous features + weather_code embedding
+        self.total_input_dim = num_continuous_features + weather_code_embed_dim
         
         self.d_model = d_model
         self.seq_len = seq_len
         self.pred_len = pred_len
         
-        # Input embedding layer
-        self.input_embedding = nn.Linear(self.num_features, d_model)
+        # Weather code embedding layer (categorical -> learned vector)
+        self.weather_code_embedding = nn.Embedding(
+            num_embeddings=num_weather_codes,
+            embedding_dim=weather_code_embed_dim
+        )
+        
+        # Input embedding layer (continuous + weather_code_embed -> d_model)
+        self.input_embedding = nn.Linear(self.total_input_dim, d_model)
         
         # Positional encoding
         self.pos_encoding = PositionalEncoding(d_model, max_len=seq_len + pred_len, dropout=dropout)
@@ -206,7 +218,8 @@ class ExcelFormer(nn.Module):
         Forward pass of ExcelFormer.
         
         Args:
-            x: Input tensor of shape (batch_size, seq_len, input_dim)
+            x: Input tensor of shape (batch_size, seq_len, num_continuous_features + 1)
+               Last column should be weather_code (integer indices)
             mask: Optional attention mask
             
         Returns:
@@ -214,8 +227,19 @@ class ExcelFormer(nn.Module):
         """
         batch_size = x.shape[0]
         
-        # Input embedding: (batch_size, seq_len, input_dim) -> (batch_size, seq_len, d_model)
-        x = self.input_embedding(x)
+        # Split continuous features and weather_code
+        # weather_code is the last column
+        continuous_features = x[:, :, :-1]  # (batch, seq_len, num_continuous_features)
+        weather_codes = x[:, :, -1].long()   # (batch, seq_len) - integer indices
+        
+        # Get weather code embeddings
+        weather_code_embed = self.weather_code_embedding(weather_codes)  # (batch, seq_len, embed_dim)
+        
+        # Concatenate continuous features with weather code embeddings
+        combined = torch.cat([continuous_features, weather_code_embed], dim=-1)  # (batch, seq_len, total_input_dim)
+        
+        # Input embedding: -> (batch_size, seq_len, d_model)
+        x = self.input_embedding(combined)
         
         # Add positional encoding
         x = self.pos_encoding(x)
@@ -257,14 +281,18 @@ def build_model_from_config(config: dict) -> ExcelFormer:
     Returns:
         Configured ExcelFormer model
     """
-    num_weather_features = len(config.get('features', {}).get('inputs', []))
+    # Number of weather inputs excluding weather_code + time features
+    num_weather_inputs = len(config.get('features', {}).get('inputs', [])) - 1  # -1 for weather_code
     num_time_features = config.get('features', {}).get('num_time_features', 6)
+    num_continuous_features = num_weather_inputs + num_time_features
+    
     seq_len = config.get('training', {}).get('seq_len', 24)
     pred_len = config.get('training', {}).get('pred_len', 24)
     
     model = ExcelFormer(
-        num_weather_features=num_weather_features if num_weather_features > 0 else 11,
-        num_time_features=num_time_features,
+        num_continuous_features=num_continuous_features if num_continuous_features > 0 else 16,
+        num_weather_codes=100,  # WMO codes 0-99
+        weather_code_embed_dim=8,
         seq_len=seq_len,
         pred_len=pred_len,
     )
@@ -277,29 +305,38 @@ if __name__ == "__main__":
     batch_size = 32
     seq_len = 24
     pred_len = 24
-    num_weather_features = 11  # Hava durumu parametreleri
-    num_time_features = 6       # Sin/Cos zaman bileşenleri (hour, day, month)
+    
+    # Feature breakdown:
+    # - 10 weather features (excluding weather_code)
+    # - 6 time features (sin/cos for hour, day, month)
+    # - 1 weather_code (last column, will be embedded)
+    num_continuous_features = 16  # 10 weather + 6 time
+    weather_code_embed_dim = 8
     
     model = ExcelFormer(
-        num_weather_features=num_weather_features,
-        num_time_features=num_time_features,
+        num_continuous_features=num_continuous_features,
+        num_weather_codes=100,
+        weather_code_embed_dim=weather_code_embed_dim,
         seq_len=seq_len,
         pred_len=pred_len
     )
     
-    # Total input features
-    total_features = num_weather_features + num_time_features
+    # Total input features = continuous + 1 (weather_code as last column)
+    total_input_cols = num_continuous_features + 1  # 17 columns
     
-    # Create dummy input
-    x = torch.randn(batch_size, seq_len, total_features)
+    # Create dummy input (last column is weather_code as integers 0-99)
+    x_continuous = torch.randn(batch_size, seq_len, num_continuous_features)
+    x_weather_code = torch.randint(0, 100, (batch_size, seq_len, 1)).float()
+    x = torch.cat([x_continuous, x_weather_code], dim=-1)
     
     # Forward pass
     output = model(x)
     
-    print(f"Weather features: {num_weather_features}")
-    print(f"Time features (sin/cos): {num_time_features}")
-    print(f"Total input features: {total_features}")
+    print(f"Continuous features: {num_continuous_features}")
+    print(f"Weather code embedding dim: {weather_code_embed_dim}")
+    print(f"Total input columns: {total_input_cols}")
     print(f"Input shape: {x.shape}")
     print(f"Output shape: {output.shape}")
     print(f"Total parameters: {model.get_num_params():,}")
     print(f"Trainable parameters: {model.get_num_trainable_params():,}")
+

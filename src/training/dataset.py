@@ -26,20 +26,30 @@ class WeatherDataset(Dataset):
         mean = stats['mean']
         std = stats['std']
         input_cols = stats['input_cols']
+        all_cols = stats.get('all_cols', input_cols)
         
-        # Ensure column order matches statistics
-        # Note: input_cols already contains target_col because of the change in stats script
-        df = df[input_cols]
+        has_weather_code = 'weather_code' in df.columns
+        weather_code_data = None
+        if has_weather_code:
+            weather_code_data = df['weather_code'].values
+        
+        df_norm = df[input_cols].copy()
+        normalized_values = (df_norm.values - mean) / std
+        
+        if has_weather_code:
+            self.data = torch.tensor(
+                np.column_stack([normalized_values, weather_code_data]), 
+                dtype=torch.float32
+            )
+            all_cols_list = list(input_cols) + ['weather_code']
+        else:
+            self.data = torch.tensor(normalized_values, dtype=torch.float32)
+            all_cols_list = list(input_cols)
             
-        self.data = torch.tensor(df.values, dtype=torch.float32)
-        
         try:
-            self.target_idx = df.columns.get_loc(target_col)
-            normalized_data = (self.data - mean) / std
-
-            self.data = torch.tensor(normalized_data, dtype=torch.float32)
-        except KeyError:
-            raise ValueError(f"Target column '{target_col}' not found in dataset columns: {df.columns.tolist()}")
+            self.target_idx = all_cols_list.index(target_col)
+        except ValueError:
+            raise ValueError(f"Target column '{target_col}' not found in dataset columns: {all_cols_list}")
 
     def __len__(self):
         return len(self.data) - self.seq_len - self.pred_len + 1
