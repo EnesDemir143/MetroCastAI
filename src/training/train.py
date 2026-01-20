@@ -169,26 +169,34 @@ def create_optimizer(model: nn.Module, config: dict) -> torch.optim.Optimizer:
     return optimizer
 
 
-def create_scheduler(optimizer, config: dict):
-    """Create learning rate scheduler."""
+def create_scheduler(optimizer, config: dict, num_training_steps_per_epoch: int):
+    """
+    Create learning rate scheduler with warmup support.
+    
+    Warmup: LR linearly increases from 0 to base_lr during warmup epochs.
+    After warmup: Applies the selected schedule (cosine, step, plateau).
+    """
     scheduler_config = config['training']['scheduler']
     scheduler_type = scheduler_config['type']
     min_lr = scheduler_config['min_lr']
+    warmup_epochs = scheduler_config['warmup_epochs']
+    total_epochs = config['training']['epochs']
     
     if scheduler_type == 'cosine':
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        # Main scheduler (after warmup)
+        main_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
-            T_max=config['training']['epochs'],
+            T_max=total_epochs - warmup_epochs,
             eta_min=min_lr
         )
     elif scheduler_type == 'step':
-        scheduler = torch.optim.lr_scheduler.StepLR(
+        main_scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer,
             step_size=30,
             gamma=0.1
         )
     elif scheduler_type == 'plateau':
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        main_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer,
             mode='min',
             factor=0.5,
@@ -197,6 +205,23 @@ def create_scheduler(optimizer, config: dict):
         )
     else:
         raise ValueError(f"Unknown scheduler type: {scheduler_type}")
+    
+    # Warmup scheduler
+    if warmup_epochs > 0:
+        warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+            optimizer,
+            start_factor=0.01,  # Start at 1% of base LR
+            end_factor=1.0,
+            total_iters=warmup_epochs
+        )
+        # Combine warmup + main scheduler
+        scheduler = torch.optim.lr_scheduler.SequentialLR(
+            optimizer,
+            schedulers=[warmup_scheduler, main_scheduler],
+            milestones=[warmup_epochs]
+        )
+    else:
+        scheduler = main_scheduler
     
     return scheduler
 
@@ -496,7 +521,7 @@ def train(config: dict):
     
     # Create optimizer and scheduler
     optimizer = create_optimizer(model, config)
-    scheduler = create_scheduler(optimizer, config)
+    scheduler = create_scheduler(optimizer, config, len(train_loader))
     
     # Loss function
     criterion = nn.MSELoss()
