@@ -56,24 +56,30 @@ function App() {
               </div>
             </div>
 
-            <div className="pt-4 space-y-8 flex flex-col items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowRequestBuilder(!showRequestBuilder)}
-                className={`group gap-3 rounded-full px-8 h-12 glass border-white/[0.05] hover:border-primary/50 transition-all duration-500 hover:bg-primary/5 ${showRequestBuilder ? 'border-primary/40 bg-primary/5' : ''}`}
-              >
-                <div className={`p-1.5 rounded-lg transition-colors ${showRequestBuilder ? 'bg-primary/20' : 'bg-white/5 group-hover:bg-primary/10'}`}>
-                  <Settings2 className={`h-3.5 w-3.5 ${showRequestBuilder ? 'text-primary' : 'text-zinc-500 group-hover:text-primary'}`} />
-                </div>
-                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${showRequestBuilder ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
-                  {showRequestBuilder ? 'Hide Advanced Console' : 'Open Developer Console'}
-                </span>
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-500 ${showRequestBuilder ? 'rotate-180 text-primary' : 'text-zinc-600'}`} />
-              </Button>
+            {/* Developer Console / Simulation Section */}
+            <div className="pt-12 space-y-10">
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRequestBuilder(!showRequestBuilder)}
+                  className={`group gap-4 rounded-full px-10 h-14 glass border-white/[0.05] hover:border-primary/50 transition-all duration-500 hover:bg-primary/5 ${showRequestBuilder ? 'border-primary/40 bg-primary/5' : ''}`}
+                >
+                  <div className={`p-2 rounded-xl transition-all ${showRequestBuilder ? 'bg-primary/20 scale-110' : 'bg-white/5 group-hover:bg-primary/10'}`}>
+                    <Settings2 className={`h-4 w-4 ${showRequestBuilder ? 'text-primary' : 'text-zinc-500 group-hover:text-primary'}`} />
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className={`text-[11px] font-black uppercase tracking-[0.2em] transition-colors ${showRequestBuilder ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                      {showRequestBuilder ? 'Close Simulation Console' : 'Open Developer Console'}
+                    </span>
+                    <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Manual Inference & API Testing</span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 ml-4 transition-transform duration-500 ${showRequestBuilder ? 'rotate-180 text-primary' : 'text-zinc-600'}`} />
+                </Button>
+              </div>
 
               {showRequestBuilder && (
-                <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-700 ease-out">
+                <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-6 duration-700 ease-out">
                   <RequestBuilder />
                 </div>
               )}
@@ -81,7 +87,9 @@ function App() {
 
             <ControlBar />
 
-            <IntelligenceConsole />
+            <div className="pt-12 border-t border-white/[0.03]">
+              <IntelligenceConsole />
+            </div>
           </div>
 
           {/* Right Column - Project Info */}
