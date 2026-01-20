@@ -4,36 +4,24 @@ version = "2.0.0"
 edition = "2024"  
 
 [profile.release]
-lto = true        # Link Time Optimization: Kodları birbirine kaynaştırır (Hız artar)
-strip = true      # Gereksiz debug sembollerini siler (Boyut küçülür)
-codegen-units = 1 # Paralel derlemeyi kapatır ama daha iyi optimize eder (Daha küçük binary)
-panic = "abort"   # Hata anında stack trace basmak yerine direkt kapanır (RAM tasarrufu)
+lto = true       
+strip = true      
+codegen-units = 1 
+panic = "abort"   
 
 [dependencies]
-# 🌐 WEB FRAMEWORK (The Backbone)
-# 2026'da hala en güvenilir ve hızlı framework.
 axum = { version = "0.7", features = ["macros"] }
 
-# ⚡ ASYNC ENGINE (The Heart)
-# Eşzamanlı binlerce isteği yöneten motor.
 tokio = { version = "1", features = ["full"] }
 
-# 📦 DATA SERIALIZATION (The Translator)
-# JSON verilerini ultra hızlı işler.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+ndarray = "0.15"
 
-# 🧠 AI INFERENCE (The Brain)
-# ONNX Runtime bağlayıcısı. Modeli C++ hızında çalıştırır.
-# "load-dynamic" özelliği ile sistemdeki kütüphaneleri kullanmaya çalışır, derlemeyi hızlandırır.
 ort = { version = "2.0.0-rc.9", features = ["load-dynamic"] }
 
-# 🛡️ SECURITY & UTILS
-# Frontend (React) ile güvenli iletişim ve detaylı loglama.
-tower-http = { version = "0.5", features = ["cors", "fs"] } # Dosya sistemi erişimi eklendi
+tower-http = { version = "0.5", features = ["cors", "fs"] } 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# 📅 TIME UTILS
-# Loglara 2026 tarih damgası basmak için :)
 chrono = "0.4"
