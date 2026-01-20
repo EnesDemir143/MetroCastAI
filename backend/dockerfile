@@ -1,0 +1,34 @@
+FROM rustlang/rust:nightly AS builder
+WORKDIR /app
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
+
+RUN cargo new --bin backend
+WORKDIR /app/backend
+COPY backend/Cargo.toml backend/Cargo.lock ./
+RUN cargo build --release
+RUN rm src/*.rs
+
+COPY backend/src ./src
+RUN touch src/main.rs && cargo build --release
+
+# Locate and move the ONNX Runtime library to a known path
+RUN find target/release/build -name "libonnxruntime*.so*" -exec cp {} ./ \;
+
+FROM debian:bookworm-slim
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libssl3 ca-certificates libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/backend/target/release/backend /app/backend
+COPY --from=builder /app/backend/libonnxruntime*.so* /usr/lib/
+
+COPY models/best_model.onnx /app/models/
+COPY models/best_model.onnx.data /app/models/
+COPY data/processed/statistics.json /app/data/
+
+ENV LD_LIBRARY_PATH=/usr/lib
+EXPOSE 3000
+
+CMD ["./backend"]

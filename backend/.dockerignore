@@ -1,0 +1,7 @@
+target/
+**/*.rs.bk
+test_payload.json
+Dockerfile
+.env
+.git
+.gitignore
