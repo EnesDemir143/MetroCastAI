@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useWeatherStore } from '@/store/useWeatherStore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,24 +81,26 @@ const RequestBuilder = () => {
     })) || [];
 
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
-            {/* Left: Console / Input */}
-            <div className="xl:col-span-7 flex flex-col rounded-[2.5rem] glass-darker overflow-hidden border-white/[0.08] shadow-2xl h-[700px]">
-                {/* Header */}
-                <div className="px-8 py-6 border-b border-white/[0.05] bg-black/20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch max-w-full overflow-hidden">
+            {/* Left: Input Console */}
+            <div className="xl:col-span-7 flex flex-col rounded-[2.5rem] glass-darker overflow-hidden border-white/[0.08] shadow-2xl h-[800px] relative">
+                {/* Header - Fixed Overlap */}
+                <div className="flex-none px-6 py-6 border-b border-white/[0.05] bg-black/40 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0ea5e9]/10 border border-[#0ea5e9]/20 shrink-0">
                             <span className="text-[10px] font-black text-primary tracking-widest uppercase">POST</span>
-                            <div className="h-3 w-px bg-primary/20"></div>
-                            <span className="text-[11px] font-mono font-bold text-white">/predict</span>
+                            <span className="text-[10px] font-mono text-zinc-400">/predict</span>
                         </div>
-                        <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">{t.requestBuilder}</h4>
+                        <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em] italic truncate hidden sm:block">
+                            {t.requestBuilder}
+                        </h4>
                     </div>
-                    <div className="flex glass p-1 rounded-full border-white/[0.05]">
+
+                    <div className="flex glass p-1 rounded-full border-white/[0.1] shrink-0">
                         <Button
                             variant="ghost"
                             size="sm"
-                            className={`h-8 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${viewMode === 'table' ? 'bg-primary text-white' : 'text-zinc-500'}`}
+                            className={`h-8 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'table' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-zinc-500 hover:text-zinc-300'}`}
                             onClick={() => setViewMode('table')}
                         >
                             <Info className="h-3 w-3 mr-2" />
@@ -107,7 +109,7 @@ const RequestBuilder = () => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className={`h-8 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${viewMode === 'json' ? 'bg-primary text-white' : 'text-zinc-500'}`}
+                            className={`h-8 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'json' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-zinc-500 hover:text-zinc-300'}`}
                             onClick={() => setViewMode('json')}
                         >
                             <Code2 className="h-3 w-3 mr-2" />
@@ -117,70 +119,71 @@ const RequestBuilder = () => {
                 </div>
 
                 {/* Toolbar */}
-                <div className="px-8 py-4 bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between">
-                    <div className="flex gap-6">
-                        <Label htmlFor="csv-upload-console" className="cursor-pointer flex items-center gap-2 group">
-                            <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-primary/10 transition-all">
-                                <Upload className="h-3 w-3 text-zinc-400 group-hover:text-primary" />
+                <div className="flex-none px-8 py-5 bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between">
+                    <div className="flex gap-8">
+                        <Label htmlFor="csv-upload-console" className="cursor-pointer flex items-center gap-2.5 group">
+                            <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/10 transition-all">
+                                <Upload className="h-3.5 w-3.5 text-zinc-400 group-hover:text-primary" />
                             </div>
-                            <span className="text-[10px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest">CSV</span>
+                            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-300 uppercase tracking-[0.15em]">CSV</span>
                             <input id="csv-upload-console" type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                         </Label>
-                        <button onClick={clearHistory} className="flex items-center gap-2 group">
-                            <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-destructive/10 transition-all">
-                                <Trash2 className="h-3 w-3 text-zinc-400 group-hover:text-destructive" />
+                        <button onClick={clearHistory} className="flex items-center gap-2.5 group">
+                            <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-destructive/10 transition-all">
+                                <Trash2 className="h-3.5 w-3.5 text-zinc-400 group-hover:text-destructive" />
                             </div>
-                            <span className="text-[10px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest">Clear</span>
+                            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-300 uppercase tracking-[0.15em]">Clear</span>
                         </button>
                     </div>
+
                     <Button
                         size="sm"
                         onClick={() => fetchConsolePrediction()}
                         disabled={isConsoleLoading}
-                        className="h-8 px-6 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-full font-black text-[10px] uppercase tracking-widest"
+                        className="h-10 px-8 bg-[#10b981] text-black hover:bg-[#059669] font-black text-[11px] uppercase tracking-widest rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/20"
                     >
-                        <Play className="h-3 w-3 mr-2 fill-current" />
+                        {isConsoleLoading ? (
+                            <div className="h-4 w-4 rounded-full border-2 border-black/30 border-t-black animate-spin mr-2"></div>
+                        ) : (
+                            <Play className="h-3.5 w-3.5 mr-2 fill-current" />
+                        )}
                         Run Inference
                     </Button>
                 </div>
 
-                <ScrollArea className="flex-1">
+                {/* Content */}
+                <ScrollArea className="flex-1 bg-black/10">
                     {viewMode === 'table' ? (
                         <div className="p-8 space-y-3">
                             {consoleHistory.map((record, i) => (
-                                <div key={i} className="flex items-center gap-4 group">
-                                    <div className="w-12 text-[9px] font-black text-zinc-600 text-right">T-{167 - i}h</div>
-                                    <div className="flex-1 grid grid-cols-4 gap-3 bg-white/[0.02] border border-white/[0.05] p-2 rounded-xl group-hover:border-white/10 group-hover:bg-white/[0.04] transition-all">
-                                        <Input
-                                            value={record.timestamp.split('T')[1].substring(0, 5)}
-                                            readOnly
-                                            className="h-7 text-[10px] font-mono bg-black/40 border-transparent text-zinc-500 cursor-default"
-                                        />
+                                <div key={i} className="flex items-center gap-6 py-1 group">
+                                    <div className="w-12 text-[9px] font-black text-zinc-700 text-right group-hover:text-primary transition-colors shrink-0">T-{167 - i}h</div>
+                                    <div className="flex-1 grid grid-cols-4 gap-3 bg-white/[0.02] border border-white/[0.04] p-2 rounded-2xl group-hover:border-white/10 group-hover:bg-white/[0.04] transition-all">
+                                        <div className="text-[10px] font-mono border-r border-white/5 flex items-center px-3 text-zinc-600">
+                                            {record.timestamp.split('T')[1].substring(0, 5)}
+                                        </div>
                                         <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-zinc-600 uppercase">Temp</span>
                                             <Input
                                                 type="number"
                                                 value={record.temperature_2m}
                                                 onChange={(e) => handleUpdateField(i, 'temperature_2m', e.target.value)}
-                                                className="h-7 pl-10 text-[11px] font-bold bg-black/20 border-white/5 text-primary focus:border-primary"
+                                                className="h-8 text-[11px] font-bold bg-black/40 border-none text-primary p-2 focus:ring-1 focus:ring-primary/30 text-center"
                                             />
                                         </div>
                                         <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-zinc-600 uppercase">Pres</span>
                                             <Input
                                                 type="number"
                                                 value={record.surface_pressure}
                                                 onChange={(e) => handleUpdateField(i, 'surface_pressure', e.target.value)}
-                                                className="h-7 pl-10 text-[11px] font-bold bg-black/20 border-white/5 text-zinc-400"
+                                                className="h-8 text-[11px] font-bold bg-black/40 border-none text-zinc-400 p-2 focus:ring-1 focus:ring-white/10 text-center"
                                             />
                                         </div>
                                         <div className="relative">
-                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] font-black text-zinc-600 uppercase">Wind</span>
                                             <Input
                                                 type="number"
                                                 value={record.wind_speed_10m}
                                                 onChange={(e) => handleUpdateField(i, 'wind_speed_10m', e.target.value)}
-                                                className="h-7 pl-10 text-[11px] font-bold bg-black/20 border-white/5 text-zinc-400"
+                                                className="h-8 text-[11px] font-bold bg-black/40 border-none text-zinc-400 p-2 focus:ring-1 focus:ring-white/10 text-center"
                                             />
                                         </div>
                                     </div>
@@ -188,61 +191,58 @@ const RequestBuilder = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="p-8">
-                            <pre className="p-6 rounded-3xl bg-black/40 border border-white/[0.1] text-emerald-400/90 text-[11px] font-mono leading-relaxed overflow-x-auto">
-                                {JSON.stringify({ recent_history: consoleHistory }, null, 2)}
-                            </pre>
+                        <div className="p-8 h-full flex flex-col">
+                            <div className="flex-1 p-6 rounded-[2rem] bg-black/40 border border-white/10 font-mono text-[11px] text-[#10b981]/90 leading-relaxed overflow-x-auto shadow-inner">
+                                <pre>{JSON.stringify({ input_data: consoleHistory }, null, 2)}</pre>
+                            </div>
                         </div>
                     )}
                 </ScrollArea>
 
                 {consoleError && (
                     <div className="px-8 py-3 bg-destructive/10 border-t border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                        <AlertCircle className="h-3 w-3" />
+                        <AlertCircle className="h-4 w-4" />
                         {consoleError}
                     </div>
                 )}
             </div>
 
-            {/* Right: Output / Visualizer */}
+            {/* Right: Output Side */}
             <div className="xl:col-span-5 flex flex-col gap-8">
-                {/* Visual Chart Card */}
-                <div className="flex-1 glass rounded-[2.5rem] p-10 border-white/[0.05] relative overflow-hidden flex flex-col min-h-[400px]">
-                    <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
-                                <ChartIcon className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                                <h4 className="text-[12px] font-black text-white uppercase tracking-widest italic">Simulation Output</h4>
-                                <p className="text-[9px] text-zinc-500 uppercase font-black">7-Day Forecast Visualization</p>
-                            </div>
+                {/* Result Visualizer - Matching Screenshot */}
+                <div className="flex-1 glass-darker rounded-[3rem] p-10 border-white/[0.08] flex flex-col min-h-[480px] shadow-2xl relative overflow-hidden">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="p-3 rounded-2xl bg-[#0ea5e9]/10 border border-[#0ea5e9]/20">
+                            <ChartIcon className="h-5 w-5 text-primary" />
                         </div>
-                        {isConsoleLoading && (
-                            <div className="h-2 w-2 rounded-full bg-primary animate-ping"></div>
-                        )}
+                        <div>
+                            <h4 className="text-[13px] font-black text-white uppercase tracking-[0.2em] italic">Simulation Output</h4>
+                            <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">7-Day Forecast Visualization</p>
+                        </div>
                     </div>
 
-                    <div className="flex-1 w-full relative">
+                    <div className="flex-1 w-full bg-black/40 rounded-[2.5rem] p-6 border border-white/[0.03] flex items-center justify-center">
                         {consolePredictions ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff03" vertical={false} />
                                     <XAxis dataKey="hour" hide />
                                     <YAxis
                                         domain={['auto', 'auto']}
-                                        stroke="#ffffff20"
+                                        stroke="#ffffff10"
                                         fontSize={10}
+                                        tickLine={false}
+                                        axisLine={false}
                                         tickFormatter={(v) => `${v}°`}
                                     />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#09090b', border: '1px solid #ffffff10', borderRadius: '1rem' }}
-                                        itemStyle={{ color: '#38bdf8', fontSize: '12px' }}
+                                        contentStyle={{ backgroundColor: '#09090b', border: '1px solid #ffffff05', borderRadius: '1rem', fontSize: '11px', fontWeight: 'bold' }}
+                                        itemStyle={{ color: '#0ea5e9' }}
                                     />
                                     <Line
                                         type="monotone"
                                         dataKey="temp"
-                                        stroke="#38bdf8"
+                                        stroke="#0ea5e9"
                                         strokeWidth={3}
                                         dot={false}
                                         animationDuration={1000}
@@ -250,48 +250,53 @@ const RequestBuilder = () => {
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
-                                <div className="p-6 rounded-full bg-white/[0.02] border border-white/[0.05]">
-                                    <Play className="h-8 w-8 text-zinc-800" />
+                            <div className="flex flex-col items-center gap-6 text-center">
+                                <div className="h-16 w-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02]">
+                                    <Play className="h-6 w-6 text-zinc-600 ml-1" />
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">Waiting for Execution</p>
-                                    <p className="text-[9px] text-zinc-700 font-bold max-w-[200px]">Update parameters or click 'Run Inference' to see preview</p>
+                                <div className="space-y-2">
+                                    <h5 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Waiting for Execution</h5>
+                                    <p className="text-[10px] text-zinc-600 max-w-[200px] leading-relaxed">Update parameters or click 'Run Inference' to see preview</p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-10">
-                        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest block mb-1">Peak Temp</span>
-                            <span className="text-xl font-black text-white italic">
-                                {consolePredictions ? `${Math.max(...consolePredictions).toFixed(1)}°C` : '--'}
+                    <div className="grid grid-cols-2 gap-6 mt-10">
+                        <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Peak Temp</span>
+                            <span className="text-2xl font-black text-white italic">
+                                {consolePredictions ? `${Math.max(...consolePredictions).toFixed(1)}°` : '--'}
                             </span>
                         </div>
-                        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest block mb-1">Low Temp</span>
-                            <span className="text-xl font-black text-white italic">
-                                {consolePredictions ? `${Math.min(...consolePredictions).toFixed(1)}°C` : '--'}
+                        <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Low Temp</span>
+                            <span className="text-2xl font-black text-white italic">
+                                {consolePredictions ? `${Math.min(...consolePredictions).toFixed(1)}°` : '--'}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* Response Code Card */}
-                <div className="glass rounded-[2rem] p-8 border-white/[0.05] bg-emerald-500/[0.02]">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Inference Response (JSON)</span>
+                {/* API Response JSON - Matching Screenshot Bottom Right */}
+                <div className="glass-darker rounded-[2.5rem] p-8 border-white/[0.08] bg-black/20 flex flex-col gap-6 shadow-xl">
+                    <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-[#10b981] shadow-[0_0_12px_rgba(16,185,129,0.5)]"></div>
+                        <span className="text-[10px] font-black text-[#10b981] uppercase tracking-[0.2em] italic">Inference Response (JSON)</span>
                     </div>
-                    <ScrollArea className="h-[120px]">
-                        <pre className="text-[10px] font-mono text-emerald-400/70 leading-relaxed">
+                    <div className="p-6 rounded-2xl bg-black/60 border border-white/[0.03] font-mono text-[10px] text-[#10b981]/70 leading-relaxed shadow-inner overflow-hidden">
+                        <pre>
                             {consolePredictions
-                                ? JSON.stringify({ status: 200, predictions: consolePredictions.slice(0, 10).map(v => parseFloat(v.toFixed(4))), suffix: '...' }, null, 2)
+                                ? JSON.stringify({
+                                    status: "200 OK",
+                                    inference_time: "42ms",
+                                    prediction_range: "168h",
+                                    samples: consolePredictions.slice(0, 3).map(v => parseFloat(v.toFixed(2)))
+                                }, null, 2)
                                 : '{ "waiting": "execution..." }'
                             }
                         </pre>
-                    </ScrollArea>
+                    </div>
                 </div>
             </div>
         </div>

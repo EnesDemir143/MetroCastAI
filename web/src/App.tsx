@@ -26,7 +26,7 @@ function App() {
     <div className="min-h-screen font-sans selection:bg-primary/30 antialiased">
       <Header />
 
-      <main className="container mx-auto py-10 px-6 max-w-7xl">
+      <main className="container mx-auto py-12 px-6 max-w-[1440px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
           {/* Left Column - Dashboard & Controls */}
