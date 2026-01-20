@@ -22,15 +22,14 @@ export interface WandBHistoryPoint {
 
 export const fetchLatestWandBRun = async (entity: string, project: string, apiKey: string): Promise<WandBRunMetrics | null> => {
     const query = `
-        query GetLatestFinishedRun($entity: String!, $project: String!) {
+        query GetLatestRuns($entity: String!, $project: String!) {
             project(name: $project, entityName: $entity) {
-                runs(last: 1, filters: "{\"state\": \"finished\"}") {
+                runs(last: 10) {
                     edges {
                         node {
                             name
                             state
                             updatedAt
-                            duration
                             summaryMetrics
                         }
                     }
@@ -54,7 +53,15 @@ export const fetchLatestWandBRun = async (entity: string, project: string, apiKe
             }
         );
 
-        const runNode = response.data?.data?.project?.runs?.edges?.[0]?.node;
+        if (response.data?.errors) {
+            console.error('WandB GraphQL Errors (Metrics):', JSON.stringify(response.data.errors, null, 2));
+            return null;
+        }
+
+        const runs = response.data?.data?.project?.runs?.edges || [];
+        const activeRun = runs.find((edge: any) => edge.node.state === 'finished') || runs.find((edge: any) => edge.node.state === 'running') || runs[0];
+
+        const runNode = activeRun?.node;
         if (!runNode) return null;
 
         const metrics = JSON.parse(runNode.summaryMetrics || '{}');
@@ -62,16 +69,16 @@ export const fetchLatestWandBRun = async (entity: string, project: string, apiKe
         return {
             loss: metrics['train/loss'] || metrics['loss'] || null,
             valLoss: metrics['val/loss'] || null,
-            mae: metrics['train/mae_celsius'] || null,
-            valMae: metrics['val/mae_celsius'] || null,
+            mae: metrics['val/mae_celsius'] || metrics['val/mae'] || metrics['train/mae_celsius'] || null,
+            valMae: metrics['val/mae_celsius'] || metrics['val/mae'] || null,
             epoch: metrics['epoch'] || null,
             state: runNode.state,
             updatedAt: runNode.updatedAt,
-            duration: runNode.duration || null,
-            totalSteps: metrics['global_step'] || metrics['Step'] || metrics['train/global_step'] || null
+            duration: null,
+            totalSteps: metrics['_step'] || metrics['global_step'] || metrics['Step'] || metrics['train/global_step'] || null
         };
     } catch (error) {
-        console.error('Error fetching WandB data:', error);
+        console.error('Error fetching WandB metrics:', error);
         return null;
     }
 };
@@ -80,10 +87,11 @@ export const fetchRunHistory = async (entity: string, project: string, apiKey: s
     const query = `
         query GetRunHistory($entity: String!, $project: String!) {
             project(name: $project, entityName: $entity) {
-                runs(last: 1) {
+                runs(last: 5) {
                     edges {
                         node {
-                            sampledHistory(keys: ["train/loss", "val/mae_celsius", "epoch"], samples: 50)
+                            state
+                            history
                         }
                     }
                 }
@@ -103,13 +111,33 @@ export const fetchRunHistory = async (entity: string, project: string, apiKey: s
             }
         );
 
-        // sampledHistory returns a list of history objects for the keys requested
-        const historyData = response.data?.data?.project?.runs?.edges?.[0]?.node?.sampledHistory?.[0] || [];
-        return historyData.map((item: any) => ({
-            epoch: item.epoch || 0,
-            loss: item['train/loss'] || 0,
-            valMae: item['val/mae_celsius'] || 0,
-        })).sort((a: any, b: any) => a.epoch - b.epoch);
+        if (response.data?.errors) {
+            console.error('WandB GraphQL Errors (History):', JSON.stringify(response.data.errors, null, 2));
+            // Even if there are errors in some runs, try to proceed with data if present
+        }
+
+        const runs = response.data?.data?.project?.runs?.edges || [];
+        const activeRun = runs.find((edge: any) => edge.node.state === 'finished') || runs.find((edge: any) => edge.node.state === 'running') || runs[0];
+
+        if (!activeRun?.node?.history) return [];
+
+        const historyRaw = activeRun.node.history;
+
+        // WandB 'history' field usually returns an array of JSON strings
+        const points = historyRaw.map((itemStr: string) => {
+            try {
+                const item = JSON.parse(itemStr);
+                return {
+                    epoch: item.epoch !== undefined ? item.epoch : (item._step || 0),
+                    loss: item['train/loss'] || item['loss'] || 0,
+                    valMae: item['val/mae_celsius'] || item['val/mae'] || 0,
+                };
+            } catch (e) {
+                return null;
+            }
+        }).filter((p: any) => p !== null);
+
+        return points.sort((a: any, b: any) => a.epoch - b.epoch);
     } catch (error) {
         console.error('Error fetching WandB history:', error);
         return [];

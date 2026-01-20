@@ -79,7 +79,7 @@ const ForecastChart = () => {
 
     return (
         <div className="w-full h-[320px] relative mt-4">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart
                     data={displayData}
                     margin={{ top: 20, right: 10, left: 10, bottom: 20 }}

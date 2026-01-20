@@ -14,24 +14,35 @@ const IntelligenceConsole = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
 
-    const entity = import.meta.env.VITE_WANDB_ENTITY || '';
+    const entity = import.meta.env.VITE_WANDB_ENTITY || 'jieuna1-kocaeli-university';
     const project = import.meta.env.VITE_WANDB_PROJECT || 'MetroCast-AI';
     const apiKey = import.meta.env.VITE_WANDB_API_KEY || '';
 
     useEffect(() => {
-        if (entity && apiKey) {
-            const fetchData = async () => {
-                setIsLoading(true);
+        console.log('IntelligenceConsole - Checking Connection:', { entity, project, hasApiKey: !!apiKey });
+
+        if (!apiKey) {
+            console.warn('WandB API Key is missing. Please check VITE_WANDB_API_KEY in .env');
+            return;
+        }
+
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
                 const [metricsData, historyData] = await Promise.all([
                     fetchLatestWandBRun(entity, project, apiKey),
                     fetchRunHistory(entity, project, apiKey)
                 ]);
+                console.log('WandB Data Received:', { metricsData, historyCount: historyData?.length });
                 setMetrics(metricsData);
                 setHistory(historyData);
+            } catch (error) {
+                console.error('Failed to fetch WandB data:', error);
+            } finally {
                 setIsLoading(false);
-            };
-            fetchData();
-        }
+            }
+        };
+        fetchData();
     }, [entity, project, apiKey]);
 
 
@@ -84,24 +95,27 @@ const IntelligenceConsole = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-4">
-                                <div className="flex items-end justify-between">
+                                <div className="flex items-center justify-between">
                                     <div className="space-y-1">
                                         <h4 className="text-2xl font-black text-white italic tracking-tighter">
                                             {metrics?.loss?.toFixed(6) || '---'}
                                         </h4>
                                         <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Total Train Loss</p>
                                     </div>
-                                    <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
-                                        <Activity className="h-4 w-4 text-primary" />
+                                    <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                                        <Activity className="h-4 w-4 text-blue-500" />
                                     </div>
                                 </div>
                                 {metrics?.valLoss && (
-                                    <div className="flex items-end justify-between pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                         <div className="space-y-1">
                                             <h4 className="text-xl font-black text-zinc-300 italic tracking-tighter">
                                                 {metrics.valLoss.toFixed(6)}
                                             </h4>
                                             <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Val Loss</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/10">
+                                            <Activity className="h-3.5 w-3.5 text-primary/50" />
                                         </div>
                                     </div>
                                 )}
