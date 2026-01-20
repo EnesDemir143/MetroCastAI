@@ -18,7 +18,6 @@ CONFIG_PATH = os.path.join(root_dir, 'config.yaml')
 with open(CONFIG_PATH, 'r') as f:
     config = yaml.safe_load(f)
 
-os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
 
 # Initialize Logger
 logger = setup_logger('update_data', 'logs/update_data.log')
@@ -30,6 +29,8 @@ TIME_ZONE = config['location']['timezone']
 FILE_PATH = config['data']['raw_file_path']
 BUCKET_NAME = config['data']['bucket_name']
 HOURLY_PARAMS = config['features']['inputs']
+
+os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
 
 def main():
     logger.info("Starting data update process...")
