@@ -14,6 +14,7 @@ interface WeatherState {
     language: Language;
     activeTab: 'temperature' | 'precipitation' | 'wind';
     displayedTemp: number | string | null;
+    selectedDayIndex: number;
     isLoadingSample: boolean;
 
     setInputHistory: (history: WeatherInputRecord[]) => void;
@@ -24,6 +25,7 @@ interface WeatherState {
     setLanguage: (lang: Language) => void;
     setActiveTab: (tab: 'temperature' | 'precipitation' | 'wind') => void;
     setDisplayedTemp: (temp: number | string | null) => void;
+    setSelectedDayIndex: (index: number) => void;
     fetchSampleData: () => Promise<void>;
 }
 
@@ -37,6 +39,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     language: 'tr',
     activeTab: 'temperature',
     displayedTemp: null,
+    selectedDayIndex: 0,
     isLoadingSample: false,
 
     setInputHistory: (history) => set({ inputHistory: history, error: null }),
@@ -44,6 +47,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     setLanguage: (lang) => set({ language: lang }),
     setActiveTab: (tab) => set({ activeTab: tab }),
     setDisplayedTemp: (temp) => set({ displayedTemp: temp }),
+    setSelectedDayIndex: (index: number) => set({ selectedDayIndex: index }),
 
     toggleModal: (isOpen) => set({ isModalOpen: isOpen }),
 
@@ -76,7 +80,12 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
             const data = await fetchS3SampleData();
             // Take last 24h of data for the prediction history
             const history = data.slice(-24);
-            set({ inputHistory: history, isLoadingSample: false });
+            set({
+                inputHistory: history,
+                isLoadingSample: false,
+                selectedDayIndex: 0,
+                displayedTemp: null
+            });
 
             // Automatically get prediction for the loaded data
             await get().fetchPrediction();
@@ -88,5 +97,13 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
         }
     },
 
-    reset: () => set({ inputHistory: [], predictions: null, realData: null, isLoading: false, error: null }),
+    reset: () => set({
+        inputHistory: [],
+        predictions: null,
+        realData: null,
+        isLoading: false,
+        error: null,
+        displayedTemp: null,
+        selectedDayIndex: 0
+    }),
 }));

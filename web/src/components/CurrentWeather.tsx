@@ -3,23 +3,23 @@ import { useWeatherStore } from '@/store/useWeatherStore';
 import { translations } from '@/utils/translations';
 
 const CurrentWeather = () => {
-    const { predictions, language, displayedTemp } = useWeatherStore();
+    const { predictions, inputHistory, language, displayedTemp } = useWeatherStore();
     const t = translations[language];
 
-    // Use displayed prediction if available, otherwise current prediction or fallback
+    // Use latest temperature from S3 history as current if no display override
+    const latestHistoricalTemp = inputHistory.length > 0
+        ? inputHistory[inputHistory.length - 1].temperature_2m
+        : null;
+
     const currentTemp = displayedTemp !== null
         ? Math.round(Number(displayedTemp))
-        : (predictions ? Math.round(predictions[0]) : '--');
-    const condition = "Parçalı Bulutlu"; // Mocked condition
+        : (predictions ? Math.round(predictions[0]) : (latestHistoricalTemp !== null ? Math.round(latestHistoricalTemp) : '--'));
 
-    const humidity = "68%";
-    const precip = "10%";
-    const wind = "12 km/s";
+    const condition = "İstanbul Forecast";
 
     // Format current date: "Salı 14:00"
     const now = new Date();
     const dayName = t.days[now.getDay()];
-    // const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
     return (
         <div className="flex flex-col gap-6 w-full">
@@ -36,18 +36,6 @@ const CurrentWeather = () => {
                         </div>
                     </div>
                 </div>
-
-                <div className="flex flex-col items-end text-right gap-1 text-muted-foreground text-sm">
-                    <div className="flex items-center gap-2">
-                        <span>{t.precipitation}: <span className="text-foreground">{precip}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span>{t.humidity}: <span className="text-foreground">{humidity}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span>{t.wind}: <span className="text-foreground">{wind}</span></span>
-                    </div>
-                </div>
             </div>
 
             {/* Location & Time */}
@@ -57,7 +45,6 @@ const CurrentWeather = () => {
                     {dayName} • {condition}
                 </div>
             </div>
-
         </div>
     );
 };

@@ -20,24 +20,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const ForecastChart = () => {
-    const { predictions, inputHistory, activeTab } = useWeatherStore();
-
-    // Determine colors based on active activeTab
-    const getConfig = () => {
-        switch (activeTab) {
-            case 'precipitation': return { color: '#3B82F6', id: 'colorBlue' };
-            case 'wind': return { color: '#22C55E', id: 'colorGreen' };
-            case 'temperature':
-            default: return { color: '#FFD600', id: 'colorYellow' };
-        }
-    };
-
-    const { color, id } = getConfig();
+    const { predictions, inputHistory } = useWeatherStore();
+    const color = '#FFD600'; // Always yellow for temperature
+    const id = 'colorYellow';
 
     // Mock data if no predictions yet
     const mockData = Array.from({ length: 24 }).map((_, i) => ({
         time: `${i}:00`,
-        temperature: activeTab === 'temperature' ? Math.sin(i / 3) * 5 + 15 : Math.random() * 10,
+        temperature: Math.sin(i / 3) * 5 + 15,
         isForecast: true,
     }));
 
