@@ -4,6 +4,16 @@ from tqdm import tqdm
 from botocore.exceptions import NoCredentialsError
 import hashlib
 
+def download_from_s3(file_path, bucket_name):
+    s3 = boto3.client('s3')
+    try:
+        logger.info(f"Downloading {file_path} from S3...")
+        s3.download_file(bucket_name, os.path.basename(file_path), file_path)
+        return True
+    except Exception as e:
+        logger.error(f"S3 Download Error: {e}")
+        return False
+
 def get_md5(file_path):
     """This function calculates the MD5 hash of a file."""
     hash_md5 = hashlib.md5()

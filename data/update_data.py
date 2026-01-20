@@ -11,12 +11,14 @@ root_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(str(root_dir))
 
 from src.utils.logger import setup_logger
-from src.utils.s3_client import upload_to_s3
+from src.utils.s3_client import upload_to_s3, download_from_s3
 
 # Load Config
 CONFIG_PATH = os.path.join(root_dir, 'config.yaml')
 with open(CONFIG_PATH, 'r') as f:
     config = yaml.safe_load(f)
+
+os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
 
 # Initialize Logger
 logger = setup_logger('update_data', 'logs/update_data.log')
@@ -33,8 +35,8 @@ def main():
     logger.info("Starting data update process...")
 
     if not os.path.exists(FILE_PATH):
-        logger.error(f"File not found at {FILE_PATH}. Please run fetch_data.py first.")
-        return
+        logger.info(f"File not found at {FILE_PATH}. Downloading from S3...")
+        download_from_s3(FILE_PATH, BUCKET_NAME)
 
     try:
         # Load existing data
