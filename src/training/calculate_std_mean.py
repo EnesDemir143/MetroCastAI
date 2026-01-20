@@ -15,6 +15,8 @@ def preprocess_and_split():
     
     df['hour_sin'] = np.sin(2 * np.pi * df['time'].dt.hour / 24)
     df['hour_cos'] = np.cos(2 * np.pi * df['time'].dt.hour / 24)
+    df['day_sin'] = np.sin(2 * np.pi * df['time'].dt.day / 365)
+    df['day_cos'] = np.cos(2 * np.pi * df['time'].dt.day / 365)
     df['month_sin'] = np.sin(2 * np.pi * (df['time'].dt.month - 1) / 12)
     df['month_cos'] = np.cos(2 * np.pi * (df['time'].dt.month - 1) / 12)
     
