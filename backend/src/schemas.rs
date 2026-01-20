@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct PredictionRequest {
-    /// Exactly 24 hourly records of recent history
+    /// Exactly 168 hourly records of recent history (7 days)
     pub recent_history: Vec<WeatherInputRecord>,
 }
 
@@ -27,6 +27,6 @@ pub struct WeatherInputRecord {
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct PredictionResponse {
-    /// 24 predicted hourly temperatures in Celsius
+    /// 168 predicted hourly temperatures in Celsius (7 days)
     pub predictions: Vec<f32>,
 }

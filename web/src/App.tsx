@@ -8,6 +8,7 @@ import DailyForecast from './components/DailyForecast';
 import ControlBar from './components/ControlBar';
 import ProjectInfo from './components/ProjectInfo';
 import RequestBuilder from './components/RequestBuilder';
+import IntelligenceConsole from './components/IntelligenceConsole';
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Settings2 } from 'lucide-react'
 import { translations } from './utils/translations';
@@ -79,6 +80,8 @@ function App() {
             </div>
 
             <ControlBar />
+
+            <IntelligenceConsole />
           </div>
 
           {/* Right Column - Project Info */}

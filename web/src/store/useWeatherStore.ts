@@ -54,8 +54,8 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     fetchPrediction: async () => {
         const { inputHistory } = get();
 
-        if (inputHistory.length !== 24) {
-            set({ error: 'Exactly 24 hours of history are required.' });
+        if (inputHistory.length !== 168) {
+            set({ error: 'Exactly 168 hours (7 days) of history are required.' });
             return;
         }
 
@@ -78,8 +78,8 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
         set({ isLoadingSample: true, error: null });
         try {
             const data = await fetchS3SampleData();
-            // Take last 24h of data for the prediction history
-            const history = data.slice(-24);
+            // Take last 168h of data for the prediction history
+            const history = data.slice(-168);
             set({
                 inputHistory: history,
                 isLoadingSample: false,

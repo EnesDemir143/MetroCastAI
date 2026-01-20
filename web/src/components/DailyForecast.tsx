@@ -6,52 +6,49 @@ const DailyForecast = () => {
     const { language, predictions, inputHistory, selectedDayIndex, setSelectedDayIndex, setDisplayedTemp } = useWeatherStore();
     const t = translations[language];
 
-    // Calculate Today/Tomorrow from predictions (which covers 24h from last history)
-    // We can split predictions into Today and Tomorrow based on the hour
+    // Calculate 7 days of forecast from predictions (168 hours)
     const getForecastBlocks = () => {
+        const daysToForecast = 7;
+
         if (!predictions || inputHistory.length === 0) {
-            return Array.from({ length: 2 }).map((_, i) => ({
-                day: i === 0 ? t.days[new Date().getDay()] : t.days[(new Date().getDay() + 1) % 7],
+            return Array.from({ length: daysToForecast }).map((_, i) => ({
+                day: t.days[(new Date().getDay() + i) % 7],
                 icon: <Sun size={24} className="text-yellow-500" />,
                 max: '--',
                 min: '--',
             }));
         }
 
+        const blocks = [];
         const lastTimestamp = inputHistory[inputHistory.length - 1].timestamp;
-        const lastHour = new Date(lastTimestamp).getHours();
+        const startDate = new Date(lastTimestamp);
 
-        // Hours remaining in 'Today'
-        const hoursLeftToday = 24 - (lastHour + 1);
+        // Predictions start from the hour after lastTimestamp
+        for (let i = 0; i < daysToForecast; i++) {
+            const currentDayDate = new Date(startDate);
+            currentDayDate.setDate(startDate.getDate() + i);
 
-        const todayPreds = predictions.slice(0, hoursLeftToday > 0 ? hoursLeftToday : 0);
-        const tomorrowPreds = predictions.slice(hoursLeftToday > 0 ? hoursLeftToday : 0);
+            // Slice 24 hours for each day
+            // Day 0 might be partial depending on the current hour, 
+            // but for simplicity we can take blocks of 24
+            const dayPreds = predictions.slice(i * 24, (i + 1) * 24);
 
-        const getStats = (preds: number[]) => {
-            if (preds.length === 0) return { min: '--', max: '--' };
-            return {
-                min: Math.round(Math.min(...preds)),
-                max: Math.round(Math.max(...preds))
-            };
-        };
+            const min = dayPreds.length > 0 ? Math.round(Math.min(...dayPreds)) : '--';
+            const max = dayPreds.length > 0 ? Math.round(Math.max(...dayPreds)) : '--';
 
-        const todayStats = getStats(todayPreds);
-        const tomorrowStats = getStats(tomorrowPreds);
+            let dayLabel = t.days[currentDayDate.getDay()];
+            if (i === 0) dayLabel = t.today;
+            if (i === 1) dayLabel = t.tomorrow;
 
-        return [
-            {
-                day: t.days[new Date().getDay()],
-                icon: <Sun size={24} className="text-yellow-500" />,
-                max: todayStats.max,
-                min: todayStats.min,
-            },
-            {
-                day: t.days[(new Date().getDay() + 1) % 7],
-                icon: <Cloud size={24} className="text-gray-400" />,
-                max: tomorrowStats.max,
-                min: tomorrowStats.min,
-            }
-        ];
+            blocks.push({
+                day: dayLabel,
+                icon: i % 3 === 0 ? <Sun size={24} className="text-yellow-500" /> : <Cloud size={24} className="text-gray-400" />,
+                max,
+                min,
+            });
+        }
+
+        return blocks;
     };
 
     const forecastData = getForecastBlocks();

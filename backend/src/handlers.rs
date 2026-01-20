@@ -15,7 +15,7 @@ pub struct AppState {
 /// Handler for prediction endpoint
 ///
 /// Steps:
-/// 1. Validate input length (must be 24 hours)
+/// 1. Validate input length (must be 168 hours / 7 days)
 /// 2. Preprocess input (normalize + time encoding) -> Tensor
 /// 3. Run ONNX model inference
 /// 4. Denormalize output (predicted temperature)
@@ -37,10 +37,10 @@ pub async fn predict(
     Json(payload): Json<PredictionRequest>,
 ) -> Result<Json<PredictionResponse>, (StatusCode, String)> {
     // 1. Validation and mapping
-    if payload.recent_history.len() != 24 {
+    if payload.recent_history.len() != 168 {
         return Err((
             StatusCode::BAD_REQUEST,
-            format!("Expected 24 hourly records, got {}", payload.recent_history.len()),
+            format!("Expected 168 hourly records, got {}", payload.recent_history.len()),
         ));
     }
 
@@ -64,7 +64,7 @@ pub async fn predict(
         .collect();
 
     // 2. Preprocessing
-    // Returns tensor of shape (1, 24, 17)
+    // Returns tensor of shape (1, 168, 17)
     let input_tensor = preprocess_sequence(&records, &state.stats).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -145,7 +145,7 @@ pub async fn predict(
     ))?;
 
     // Denormalize: value * std + mean
-    // We expect 24 prediction steps
+    // We expect 168 prediction steps
     // Explicit type for loop variable to help type inference
     let predictions: Vec<f32> = output_raw
         .iter()

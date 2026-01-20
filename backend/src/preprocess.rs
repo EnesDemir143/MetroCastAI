@@ -182,7 +182,7 @@ pub fn preprocess_sequence(
     records: &[WeatherRecord],
     stats: &Statistics,
 ) -> Result<Array3<f32>, PreprocessError> {
-    const SEQ_LEN: usize = 24;
+    const SEQ_LEN: usize = 168;
     const NUM_FEATURES: usize = 17; // 16 normalized + 1 weather_code
 
     if records.len() != SEQ_LEN {

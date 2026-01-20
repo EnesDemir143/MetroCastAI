@@ -22,44 +22,59 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const ForecastChart = () => {
-    const { predictions, inputHistory } = useWeatherStore();
+    const { predictions, inputHistory, selectedDayIndex } = useWeatherStore();
     const color = 'hsl(var(--primary))';
     const id = 'colorAzure';
-
-    // Mock data if no predictions yet
-    const mockData = Array.from({ length: 24 }).map((_, i) => ({
-        time: `${i}:00`,
-        temperature: Math.sin(i / 3) * 5 + 15,
-        isForecast: true,
-    }));
 
     // Prepare data
     let displayData: any[] = [];
     let forecastStartIndex = -1;
 
-    if (predictions && inputHistory.length >= 24) {
-        // Last 24h History
-        const last24h = inputHistory.slice(-24).map((record: any) => ({
-            time: new Date(record.timestamp).getHours() + ':00',
-            temperature: record.temperature_2m,
-            isForecast: false,
-        }));
+    if (predictions && inputHistory.length >= 168) {
+        if (selectedDayIndex === 0) {
+            // Day 0: Show last 24h history + first 24h forecast
+            const last24h = inputHistory.slice(-24).map((record: any) => ({
+                time: new Date(record.timestamp).getHours() + ':00',
+                temperature: record.temperature_2m,
+                isForecast: false,
+            }));
 
-        forecastStartIndex = last24h.length;
+            forecastStartIndex = last24h.length;
 
-        // Next 24h Forecast
-        const lastTimestamp = inputHistory[inputHistory.length - 1].timestamp;
-        const lastHour = new Date(lastTimestamp).getHours();
+            const lastTimestamp = inputHistory[inputHistory.length - 1].timestamp;
+            const lastHour = new Date(lastTimestamp).getHours();
 
-        const next24h = predictions.map((p, i) => ({
-            time: ((lastHour + i + 1) % 24) + ':00',
-            temperature: p,
+            const next24h = predictions.slice(0, 24).map((p, i) => ({
+                time: ((lastHour + i + 1) % 24) + ':00',
+                temperature: p,
+                isForecast: true,
+            }));
+
+            displayData = [...last24h, ...next24h];
+        } else {
+            // Day 1-6: Show 24h of that specific day
+            const lastTimestamp = inputHistory[inputHistory.length - 1].timestamp;
+            const lastHour = new Date(lastTimestamp).getHours();
+
+            // Start index for the selected day (24 * index)
+            const dayStart = selectedDayIndex * 24;
+            const dayEnd = (selectedDayIndex + 1) * 24;
+
+            displayData = predictions.slice(dayStart, dayEnd).map((p, i) => ({
+                time: ((lastHour + dayStart + i + 1) % 24) + ':00',
+                temperature: p,
+                isForecast: true,
+            }));
+
+            forecastStartIndex = 0; // All forecast
+        }
+    } else {
+        // Mock data
+        displayData = Array.from({ length: 24 }).map((_, i) => ({
+            time: `${i}:00`,
+            temperature: Math.sin(i / 3) * 5 + 15,
             isForecast: true,
         }));
-
-        displayData = [...last24h, ...next24h];
-    } else {
-        displayData = mockData;
     }
 
     return (
