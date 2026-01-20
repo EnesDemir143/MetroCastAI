@@ -17,7 +17,6 @@ use std::path::Path;
 pub struct Statistics {
     pub mean: Vec<f32>,
     pub std: Vec<f32>,
-    pub input_cols: Vec<String>,
 }
 
 impl Statistics {
@@ -320,7 +319,6 @@ mod tests {
         let stats = Statistics {
             mean: vec![0.0; 16],
             std: vec![1.0; 16],
-            input_cols: vec!["test".to_string(); 16],
         };
 
         // Create 24 dummy records
@@ -353,7 +351,6 @@ mod tests {
         let stats = Statistics {
             mean: vec![0.0; 16],
             std: vec![1.0; 16],
-            input_cols: vec!["test".to_string(); 16],
         };
 
         let records: Vec<WeatherRecord> = vec![]; // Empty
