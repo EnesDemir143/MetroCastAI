@@ -1,0 +1,5 @@
+backend/target/
+**/__pycache__/
+.git/
+.env
+**/*.rs.bk
