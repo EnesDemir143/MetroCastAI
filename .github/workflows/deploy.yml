@@ -1,12 +1,10 @@
 name: MetroCast CI/CD Pipeline
 
-# Bu otomasyon ne zaman çalışsın?
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  # 1. İŞ: Kodunu Al, Paketle ve Docker Hub'a Gönder
   build-and-push:
     runs-on: ubuntu-latest
     steps:
@@ -27,14 +25,11 @@ jobs:
       with:
         context: .
         push: true
-        # Kullanıcı adını secrets'tan alıyoruz, elle yazmana gerek yok
         tags: ${{ secrets.DOCKER_USERNAME }}/metrocast-ai:latest
-        # Burası kritik: Mac'te olsan bile Linux sunucusu için üretir
         platforms: linux/amd64
 
-  # 2. İŞ: AWS Sunucusuna Bağlan ve Yeni Versiyonu Başlat
   deploy-to-ec2:
-    needs: build-and-push # Önce üstteki işin bitmesini bekle
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
     - name: SSH ile Sunucuya Bağlan
@@ -43,27 +38,20 @@ jobs:
         host: ${{ secrets.HOST_DNS }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
-        # Aşağıdaki komutlar AWS sunucunun içinde çalışır:
         script: |
-          # 1. Docker yüklü değilse kur (Garanti olsun)
           if ! command -v docker &> /dev/null; then
               sudo apt-get update
               sudo apt-get install -y docker.io
               sudo usermod -aG docker ubuntu
           fi
 
-          # 2. Eski çalışan konteyneri durdur ve sil
           sudo docker stop metrocast-container || true
           sudo docker rm metrocast-container || true
           
-          # 3. Disk dolmasın diye eski imajları temizle
           sudo docker system prune -af
 
-          # 4. Docker Hub'dan yeni versiyonu çek
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/metrocast-ai:latest
 
-          # 5. Yeni versiyonu başlat
-          # AWS şifrelerini GitHub Secrets'tan alıp konteynerin içine aktarıyoruz
           sudo docker run -d \
             --name metrocast-container \
             -p 80:8000 \
