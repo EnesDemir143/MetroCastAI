@@ -10,4 +10,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/api/s3-data': {
+        target: 'https://metrocast-ai-storage.s3.eu-central-1.amazonaws.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/s3-data/, ''),
+      },
+    },
+  },
 })

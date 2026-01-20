@@ -1,6 +1,6 @@
 import { Upload, Database } from 'lucide-react';
 import { useWeatherStore } from '../store/useWeatherStore';
-import { SAMPLE_HISTORY } from '../utils/sampleData';
+
 import {
     Dialog,
     DialogContent,
@@ -11,17 +11,14 @@ import {
 import { Card } from "@/components/ui/card"
 
 const DataEntryModal = () => {
-    const { isModalOpen, toggleModal, setInputHistory, setRealData, fetchPrediction } = useWeatherStore();
+    const { isModalOpen, toggleModal, fetchSampleData, fetchPrediction } = useWeatherStore();
 
     const handleLoadSample = async () => {
-        setInputHistory(SAMPLE_HISTORY);
-        const mockRealOutcome = SAMPLE_HISTORY.map(r => r.temperature_2m + (Math.random() * 2 - 1));
-        setRealData(mockRealOutcome);
+        await fetchSampleData();
         await fetchPrediction();
     };
 
     const handleFetchLatestS3 = async () => {
-        alert("Fetching latest data from S3...");
         await handleLoadSample();
     };
 
@@ -54,8 +51,8 @@ const DataEntryModal = () => {
                             className="cursor-pointer hover:bg-accent transition-colors p-4 flex flex-col items-center justify-center gap-2"
                             onClick={handleLoadSample}
                         >
-                            <span className="font-medium">Load Sample</span>
-                            <span className="text-xs text-muted-foreground text-center">Use pre-validated test set</span>
+                            <span className="font-medium">Load S3 Data</span>
+                            <span className="text-xs text-muted-foreground text-center">Load weather data from S3 bucket</span>
                         </Card>
 
                         <Card className="opacity-50 cursor-not-allowed p-4 flex flex-col items-center justify-center gap-2">

@@ -1,15 +1,14 @@
 import { Database, RotateCcw } from 'lucide-react';
 import { useWeatherStore } from '@/store/useWeatherStore';
-import { SAMPLE_HISTORY } from '@/utils/sampleData';
 import { Button } from "@/components/ui/button"
 import { translations } from '@/utils/translations';
 
 const ControlBar = () => {
-    const { setInputHistory, fetchPrediction, language, reset } = useWeatherStore();
+    const { fetchSampleData, fetchPrediction, language, reset } = useWeatherStore();
     const t = translations[language];
 
     const handleLoadData = async () => {
-        setInputHistory(SAMPLE_HISTORY);
+        await fetchSampleData();
         await fetchPrediction();
     };
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { predictWeather } from '../services/api';
+import { fetchS3SampleData } from '../services/s3Service';
 import type { PredictionRequest, WeatherInputRecord } from '../services/api';
 import type { Language } from '../utils/translations';
 
@@ -13,6 +14,7 @@ interface WeatherState {
     language: Language;
     activeTab: 'temperature' | 'precipitation' | 'wind';
     displayedTemp: number | string | null;
+    isLoadingSample: boolean;
 
     setInputHistory: (history: WeatherInputRecord[]) => void;
     setRealData: (data: number[]) => void;
@@ -22,6 +24,7 @@ interface WeatherState {
     setLanguage: (lang: Language) => void;
     setActiveTab: (tab: 'temperature' | 'precipitation' | 'wind') => void;
     setDisplayedTemp: (temp: number | string | null) => void;
+    fetchSampleData: () => Promise<void>;
 }
 
 export const useWeatherStore = create<WeatherState>((set, get) => ({
@@ -34,6 +37,7 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     language: 'tr',
     activeTab: 'temperature',
     displayedTemp: null,
+    isLoadingSample: false,
 
     setInputHistory: (history) => set({ inputHistory: history, error: null }),
     setRealData: (data) => set({ realData: data }),
@@ -62,6 +66,19 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
             set({
                 error: err.response?.data || err.message || 'Failed to fetch prediction',
                 isLoading: false
+            });
+        }
+    },
+
+    fetchSampleData: async () => {
+        set({ isLoadingSample: true, error: null });
+        try {
+            const data = await fetchS3SampleData();
+            set({ inputHistory: data, isLoadingSample: false });
+        } catch (err: any) {
+            set({
+                error: err.message || 'Failed to fetch sample data',
+                isLoadingSample: false
             });
         }
     },

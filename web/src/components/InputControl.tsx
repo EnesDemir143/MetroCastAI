@@ -1,12 +1,18 @@
-import { Upload, Trash2, Zap } from 'lucide-react';
+import { Upload, Trash2, Zap, Loader2 } from 'lucide-react';
 import { useWeatherStore } from '../store/useWeatherStore';
-import { SAMPLE_HISTORY } from '../utils/sampleData';
 
 const InputControl = () => {
-    const { inputHistory, setInputHistory, reset, isLoading, fetchPrediction } = useWeatherStore();
+    const {
+        inputHistory,
+        reset,
+        isLoading,
+        fetchPrediction,
+        fetchSampleData,
+        isLoadingSample
+    } = useWeatherStore();
 
-    const handleLoadSample = () => {
-        setInputHistory(SAMPLE_HISTORY);
+    const handleLoadSample = async () => {
+        await fetchSampleData();
     };
 
     const handleReset = () => {
@@ -23,16 +29,24 @@ const InputControl = () => {
                 <h2 className="text-lg font-semibold m-0">Input Data Control</h2>
                 <p className="text-sm text-text-secondary m-0">
                     {inputHistory.length > 0
-                        ? `${inputHistory.length} records loaded. Ready for prediction.`
+                        ? `${inputHistory.length} records loaded.Ready for prediction.`
                         : 'No data loaded. Load sample data to start.'}
                 </p>
             </div>
 
             <div className="flex items-center gap-3">
                 {inputHistory.length === 0 ? (
-                    <button onClick={handleLoadSample} className="flex items-center gap-2">
-                        <Upload size={18} />
-                        Load Sample Data
+                    <button
+                        onClick={handleLoadSample}
+                        disabled={isLoadingSample}
+                        className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoadingSample ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Upload size={18} />
+                        )}
+                        {isLoadingSample ? 'Loading...' : 'Load Sample Data'}
                     </button>
                 ) : (
                     <>
