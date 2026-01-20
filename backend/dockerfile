@@ -1,19 +1,31 @@
-FROM rustlang/rust:nightly AS builder
+# --- BUILD STAGE ---
+FROM rust:1.84-slim-bookworm AS builder
+
+# Gerekli sistem kütüphaneleri
+RUN apt-get update && apt-get install -y pkg-config libssl-dev g++ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
-RUN cargo new --bin backend
+# ÖNEMLİ DEĞİŞİKLİK: 'cargo new' demiyoruz. 
+# Çünkü o komut yeni bir lock dosyası üretir ve rc.11'i içeri sızdırır.
+# Onun yerine direkt dosyalarını kopyalayıp senin lock dosyana sadık kalmasını sağlıyoruz.
+
+COPY backend/Cargo.toml backend/Cargo.lock ./backend/
 WORKDIR /app/backend
-COPY backend/Cargo.toml backend/Cargo.lock ./
-RUN cargo build --release
-RUN rm src/*.rs
 
+# Bağımlılıkları senin düzelttiğin lock dosyasına göre indir ve derle
+# 'src/lib.rs' veya 'src/main.rs' varmış gibi davranarak sadece bağımlılıkları cache'liyoruz
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release --locked
+RUN rm src/main.rs
+
+# Şimdi gerçek kodunu kopyala
 COPY backend/src ./src
-RUN touch src/main.rs && cargo build --release
-
-# Locate and move the ONNX Runtime library to a known path
+RUN touch src/main.rs && cargo build --release --locked
+# ONNX kütüphanesini bul ve taşı
 RUN find target/release/build -name "libonnxruntime*.so*" -exec cp {} ./ \;
 
+# --- RUNTIME STAGE ---
 FROM debian:bookworm-slim
 WORKDIR /app
 
@@ -21,14 +33,19 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libssl3 ca-certificates libgomp1 && \
     rm -rf /var/lib/apt/lists/*
 
+# Binary'yi kopyala (Artık ismi 'backend' olacak)
 COPY --from=builder /app/backend/target/release/backend /app/backend
+
+# .so kütüphanesini kopyala
 COPY --from=builder /app/backend/libonnxruntime*.so* /usr/lib/
 
-COPY models/best_model.onnx /app/models/
-COPY models/best_model.onnx.data /app/models/
-COPY data/processed/statistics.json /app/data/
+# Modeller ve veriler (Context'in kök dizininde olduklarını varsayıyoruz)
+COPY models/ /app/models/
+
+RUN mkdir -p /app/data/processed
+COPY data/processed/statistics.json /app/data/processed/
 
 ENV LD_LIBRARY_PATH=/usr/lib
 EXPOSE 3000
 
-CMD ["./backend"]
+CMD ["/app/backend"]

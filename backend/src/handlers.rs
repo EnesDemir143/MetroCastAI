@@ -72,10 +72,15 @@ pub async fn predict(
         )
     })?;
 
-    let inputs = ort::inputs!["input" => input_value];
+    let inputs = ort::inputs!["input" => input_value].map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to create inputs: {}", e),
+        )
+    })?;
 
     // Lock the session
-    let mut session = state.session.lock().map_err(|_| {
+    let session = state.session.lock().map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to acquire model lock".to_string(),
@@ -95,21 +100,21 @@ pub async fn predict(
     // Try to get "output" directly, otherwise take the first output
     // We must copy the data out because ValueRef lives only as long as outputs/session lock
     let output_raw: Vec<f32> = if let Some(val) = outputs.get("output") {
-        let (_, data) = val.try_extract_tensor::<f32>().map_err(|e| {
+        let tensor = val.try_extract_tensor::<f32>().map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to extract output tensor: {}", e),
             )
         })?;
-        data.to_vec()
+        tensor.iter().copied().collect()
     } else if let Some(val) = outputs.values().next() {
-        let (_, data) = val.try_extract_tensor::<f32>().map_err(|e| {
+        let tensor = val.try_extract_tensor::<f32>().map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to extract output tensor: {}", e),
             )
         })?;
-        data.to_vec()
+        tensor.iter().copied().collect()
     } else {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
