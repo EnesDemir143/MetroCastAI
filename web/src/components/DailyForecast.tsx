@@ -23,6 +23,7 @@ const DailyForecast = () => {
             {weekData.map((day, i) => (
                 <div
                     key={i}
+                    onClick={() => useWeatherStore.getState().setDisplayedTemp(day.max)}
                     className={`flex flex-col items-center justify-center min-w-[70px] p-2 rounded-lg gap-2 cursor-pointer transition-colors ${i === 0 ? 'bg-muted/50' : 'hover:bg-muted/20'}`}
                 >
                     <span className="text-sm font-medium text-muted-foreground">{day.day}</span>

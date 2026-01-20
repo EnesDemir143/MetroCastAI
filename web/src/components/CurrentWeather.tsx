@@ -3,11 +3,13 @@ import { useWeatherStore } from '@/store/useWeatherStore';
 import { translations } from '@/utils/translations';
 
 const CurrentWeather = () => {
-    const { predictions, language } = useWeatherStore();
+    const { predictions, language, displayedTemp } = useWeatherStore();
     const t = translations[language];
 
-    // Use current prediction or a fallback
-    const currentTemp = predictions ? Math.round(predictions[0]) : '--';
+    // Use displayed prediction if available, otherwise current prediction or fallback
+    const currentTemp = displayedTemp !== null
+        ? Math.round(Number(displayedTemp))
+        : (predictions ? Math.round(predictions[0]) : '--');
     const condition = "Parçalı Bulutlu"; // Mocked condition
 
     const humidity = "68%";

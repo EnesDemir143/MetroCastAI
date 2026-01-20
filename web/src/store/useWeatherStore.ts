@@ -12,6 +12,7 @@ interface WeatherState {
     isModalOpen: boolean;
     language: Language;
     activeTab: 'temperature' | 'precipitation' | 'wind';
+    displayedTemp: number | string | null;
 
     setInputHistory: (history: WeatherInputRecord[]) => void;
     setRealData: (data: number[]) => void;
@@ -20,6 +21,7 @@ interface WeatherState {
     toggleModal: (isOpen: boolean) => void;
     setLanguage: (lang: Language) => void;
     setActiveTab: (tab: 'temperature' | 'precipitation' | 'wind') => void;
+    setDisplayedTemp: (temp: number | string | null) => void;
 }
 
 export const useWeatherStore = create<WeatherState>((set, get) => ({
@@ -31,11 +33,13 @@ export const useWeatherStore = create<WeatherState>((set, get) => ({
     isModalOpen: false,
     language: 'tr',
     activeTab: 'temperature',
+    displayedTemp: null,
 
     setInputHistory: (history) => set({ inputHistory: history, error: null }),
     setRealData: (data) => set({ realData: data }),
     setLanguage: (lang) => set({ language: lang }),
     setActiveTab: (tab) => set({ activeTab: tab }),
+    setDisplayedTemp: (temp) => set({ displayedTemp: temp }),
 
     toggleModal: (isOpen) => set({ isModalOpen: isOpen }),
 

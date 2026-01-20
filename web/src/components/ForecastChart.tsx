@@ -56,7 +56,16 @@ const ForecastChart = () => {
     return (
         <div className="w-full h-[250px] relative transition-colors duration-500">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={displayData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart
+                    data={displayData}
+                    margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
+                    onClick={(e: any) => {
+                        if (e && e.activePayload && e.activePayload.length > 0) {
+                            const payload = e.activePayload[0].payload;
+                            useWeatherStore.getState().setDisplayedTemp(payload.prediction);
+                        }
+                    }}
+                >
                     <defs>
                         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={color} stopOpacity={0.3} />
