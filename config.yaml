@@ -7,15 +7,51 @@ project:
 training:
   seed: 42
   split_ratio:
-    train: 0.85
+    train: 0.80
     val: 0.10
-    test: 0.05
+    test: 0.10
     
+  # Training hyperparameters
   batch_size: 32
-  epochs: 10
+  epochs: 100
   learning_rate: 0.001
+  weight_decay: 0.0001
   seq_len: 24
   pred_len: 24
+  
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"  # Options: cosine, step, plateau
+    warmup_epochs: 5
+    min_lr: 0.00001
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.0001
+  
+  # Gradient clipping
+  gradient_clip: 1.0
+
+# --- Model Hyperparameters ---
+model:
+  d_model: 128
+  n_heads: 8
+  n_layers: 4
+  d_ff: 512
+  dropout: 0.1
+  weather_code_embed_dim: 8
+  num_weather_codes: 100
+
+# --- WandB Configuration ---
+wandb:
+  enabled: true
+  project: "MetroCast-AI"
+  entity: null  # Your wandb username/team (null = default)
+  run_name: null  # Auto-generated if null
+  tags: ["excelformer", "weather", "istanbul"]
+  log_freq: 10  # Log every N batches
 
 
 # --- Location Settings ---
