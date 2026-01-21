@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Play, Upload, AlertCircle, Trash2, LineChart as ChartIcon, Code2, Info } from 'lucide-react';
 
 import type { WeatherInputRecord } from '@/services/api';
-import { translations } from '@/utils/translations';
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const RequestBuilder = () => {
@@ -20,7 +20,7 @@ const RequestBuilder = () => {
         language
     } = useWeatherStore();
 
-    const t = translations[language];
+
     const [viewMode, setViewMode] = useState<'table' | 'json'>('table');
 
     const handleUpdateField = (index: number, field: keyof WeatherInputRecord, value: string) => {
