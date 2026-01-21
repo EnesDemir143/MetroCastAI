@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const WANDB_API_URL = 'https://api.wandb.ai/graphql';
+const WANDB_API_URL = import.meta.env.PROD
+    ? 'https://api.metrocast.enesdemir.me/wandb'
+    : 'http://localhost:3000/wandb';
 
 export interface WandBRunMetrics {
     loss: number | null;

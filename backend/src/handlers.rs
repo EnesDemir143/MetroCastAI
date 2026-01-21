@@ -154,3 +154,43 @@ pub async fn predict(
 
     Ok(Json(PredictionResponse { predictions }))
 }
+
+/// Proxy handler for WandB GraphQL requests
+#[utoipa::path(
+    post,
+    path = "/wandb",
+    tag = "wandb",
+    request_body = serde_json::Value,
+    responses(
+        (status = 200, description = "Proxy Success"),
+        (status = 500, description = "Proxy Error")
+    )
+)]
+pub async fn proxy_wandb(
+    headers: axum::http::HeaderMap,
+    Json(payload): Json<serde_json::Value>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let client = reqwest::Client::new();
+    
+    // Extract Authorization header to forward
+    let auth_header = headers.get("Authorization")
+        .ok_or((StatusCode::UNAUTHORIZED, "Missing Authorization header".to_string()))?
+        .to_str()
+        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid Authorization header".to_string()))?;
+
+    let resp = client
+        .post("https://api.wandb.ai/graphql")
+        .header("Authorization", auth_header)
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("WandB request failed: {}", e)))?;
+
+    let resp_json: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to parse WandB response: {}", e)))?;
+
+    Ok(Json(resp_json))
+}

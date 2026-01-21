@@ -13,6 +13,11 @@ const IntelligenceConsole = () => {
     const [history, setHistory] = useState<WandBHistoryPoint[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const entity = import.meta.env.VITE_WANDB_ENTITY || 'jieuna1-kocaeli-university';
     const project = import.meta.env.VITE_WANDB_PROJECT || 'MetroCast-AI';
@@ -191,7 +196,7 @@ const IntelligenceConsole = () => {
                                         <div className="w-full h-full flex items-center justify-center">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                         </div>
-                                    ) : history.length > 0 ? (
+                                    ) : history.length > 0 && isMounted ? (
                                         <div className="w-full h-full min-h-[250px]">
                                             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                                 <LineChart data={history}>
@@ -258,7 +263,7 @@ const IntelligenceConsole = () => {
                                         <div className="w-full h-full flex items-center justify-center">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                         </div>
-                                    ) : history.length > 0 ? (
+                                    ) : history.length > 0 && isMounted ? (
                                         <div className="w-full h-full min-h-[250px]">
                                             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                                 <LineChart data={history}>
