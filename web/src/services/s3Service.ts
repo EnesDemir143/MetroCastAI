@@ -31,7 +31,9 @@ const parseCSV = (csvText: string): WeatherInputRecord[] => {
  */
 export const fetchS3SampleData = async (): Promise<WeatherInputRecord[]> => {
     // configured in vite.config.ts proxy
-    const PROXY_URL = '/api/s3-data/istanbul_weather.csv';
+    const PROXY_URL = import.meta.env.PROD
+        ? 'https://metrocast-ai-storage.s3.eu-central-1.amazonaws.com/istanbul_weather.csv'
+        : '/api/s3-data/istanbul_weather.csv';
 
     try {
         const response = await axios.get(PROXY_URL, { responseType: 'text' });

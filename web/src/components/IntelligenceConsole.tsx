@@ -23,10 +23,16 @@ const IntelligenceConsole = () => {
 
         if (!apiKey) {
             console.warn('WandB API Key is missing. Please check VITE_WANDB_API_KEY in .env');
-            return;
+            // We don't return here so we can show "Waiting for Data..." or a specific empty state
+            // relying on the empty history/metrics state.
         }
 
         const fetchData = async () => {
+            if (!apiKey) {
+                setIsLoading(false);
+                return;
+            }
+
             setIsLoading(true);
             try {
                 const [metricsData, historyData] = await Promise.all([
@@ -186,44 +192,48 @@ const IntelligenceConsole = () => {
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                         </div>
                                     ) : history.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={history}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                                                <XAxis
-                                                    dataKey="epoch"
-                                                    stroke="#52525b"
-                                                    fontSize={9}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                    label={{ value: 'Epoch', position: 'insideBottom', offset: -5, fontSize: 8, fill: '#71717a' }}
-                                                />
-                                                <YAxis
-                                                    stroke="#52525b"
-                                                    fontSize={9}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                    domain={['auto', 'auto']}
-                                                />
-                                                <RechartsTooltip
-                                                    contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.95)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem', fontSize: '10px' }}
-                                                    itemStyle={{ color: '#38bdf8' }}
-                                                />
-                                                <Line
-                                                    type="monotone"
-                                                    dataKey="loss"
-                                                    name="Train Loss"
-                                                    stroke="#3b82f6"
-                                                    strokeWidth={2.5}
-                                                    dot={false}
-                                                    animationDuration={1500}
-                                                    connectNulls={true}
-                                                />
-                                            </LineChart>
-                                        </ResponsiveContainer>
+                                        <div className="w-full h-full min-h-[250px]">
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                                <LineChart data={history}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                                    <XAxis
+                                                        dataKey="epoch"
+                                                        stroke="#52525b"
+                                                        fontSize={9}
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        label={{ value: 'Epoch', position: 'insideBottom', offset: -5, fontSize: 8, fill: '#71717a' }}
+                                                    />
+                                                    <YAxis
+                                                        stroke="#52525b"
+                                                        fontSize={9}
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        domain={['auto', 'auto']}
+                                                    />
+                                                    <RechartsTooltip
+                                                        contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.95)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem', fontSize: '10px' }}
+                                                        itemStyle={{ color: '#38bdf8' }}
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="loss"
+                                                        name="Train Loss"
+                                                        stroke="#3b82f6"
+                                                        strokeWidth={2.5}
+                                                        dot={false}
+                                                        animationDuration={1500}
+                                                        connectNulls={true}
+                                                    />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2 opacity-30 text-zinc-500">
                                             <Info className="h-6 w-6" />
-                                            <span className="text-[10px] uppercase font-black">History Data Unavailable</span>
+                                            <span className="text-[10px] uppercase font-black">
+                                                {!apiKey ? 'API Key Missing' : 'History Data Unavailable'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -249,42 +259,46 @@ const IntelligenceConsole = () => {
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                         </div>
                                     ) : history.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={history}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                                                <XAxis
-                                                    dataKey="epoch"
-                                                    stroke="#52525b"
-                                                    fontSize={9}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                />
-                                                <YAxis
-                                                    stroke="#52525b"
-                                                    fontSize={9}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                />
-                                                <RechartsTooltip
-                                                    contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.95)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem', fontSize: '10px' }}
-                                                    itemStyle={{ color: '#f59e0b' }}
-                                                />
-                                                <Line
-                                                    type="monotone"
-                                                    dataKey="valMae"
-                                                    name="Validation MAE"
-                                                    stroke="#f59e0b"
-                                                    strokeWidth={2.5}
-                                                    dot={false}
-                                                    animationDuration={1500}
-                                                    connectNulls={true}
-                                                />
-                                            </LineChart>
-                                        </ResponsiveContainer>
+                                        <div className="w-full h-full min-h-[250px]">
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                                <LineChart data={history}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                                    <XAxis
+                                                        dataKey="epoch"
+                                                        stroke="#52525b"
+                                                        fontSize={9}
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                    />
+                                                    <YAxis
+                                                        stroke="#52525b"
+                                                        fontSize={9}
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                    />
+                                                    <RechartsTooltip
+                                                        contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.95)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem', fontSize: '10px' }}
+                                                        itemStyle={{ color: '#f59e0b' }}
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="valMae"
+                                                        name="Validation MAE"
+                                                        stroke="#f59e0b"
+                                                        strokeWidth={2.5}
+                                                        dot={false}
+                                                        animationDuration={1500}
+                                                        connectNulls={true}
+                                                    />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2 opacity-30 text-zinc-500">
                                             <Info className="h-6 w-6" />
-                                            <span className="text-[10px] uppercase font-black">Waiting for Data...</span>
+                                            <span className="text-[10px] uppercase font-black">
+                                                {!apiKey ? 'API Key Missing' : 'Waiting for Data...'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
