@@ -194,3 +194,40 @@ pub async fn proxy_wandb(
 
     Ok(Json(resp_json))
 }
+
+/// Proxy handler for S3 sample data
+#[utoipa::path(
+    get,
+    path = "/s3-data",
+    tag = "data",
+    responses(
+        (status = 200, description = "S3 Fetch Success"),
+        (status = 500, description = "S3 Fetch Error")
+    )
+)]
+pub async fn proxy_s3() -> Result<axum::response::Response, (StatusCode, String)> {
+    let s3_url = "https://metrocast-ai-storage.s3.eu-central-1.amazonaws.com/istanbul_weather.csv";
+    
+    let resp = reqwest::get(s3_url)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to fetch from S3: {}", e)))?;
+
+    if !resp.status().is_success() {
+        return Err((StatusCode::BAD_GATEWAY, format!("S3 returned status: {}", resp.status())));
+    }
+
+    let content_type = resp.headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("text/csv")
+        .to_string();
+
+    let body = axum::body::Body::from_stream(resp.bytes_stream());
+
+    Ok(axum::response::Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", content_type)
+        .header("Access-Control-Allow-Origin", "*") 
+        .body(body)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to build response: {}", e)))?)
+}
