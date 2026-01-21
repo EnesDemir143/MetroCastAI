@@ -10,20 +10,34 @@ import ProjectInfo from './components/ProjectInfo';
 import RequestBuilder from './components/RequestBuilder';
 import IntelligenceConsole from './components/IntelligenceConsole';
 import { Button } from "@/components/ui/button"
-import { ChevronDown, Settings2 } from 'lucide-react'
+import { ChevronDown, Settings2, ArrowUp } from 'lucide-react'
 import { translations } from './utils/translations';
 
 function App() {
   const { fetchSampleData, language } = useWeatherStore();
   const [showRequestBuilder, setShowRequestBuilder] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const t = translations[language];
 
   useEffect(() => {
     fetchSampleData();
   }, [fetchSampleData]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen font-sans selection:bg-primary/30 antialiased">
+    <div id="home" className="min-h-screen font-sans selection:bg-primary/30 antialiased relative">
       <Header />
 
       <main className="container mx-auto py-12 px-6 max-w-[1440px]">
@@ -57,7 +71,7 @@ function App() {
             </div>
 
             {/* Developer Console / Simulation Section */}
-            <div className="pt-12 space-y-10">
+            <div id="console" className="pt-12 space-y-10">
               <div className="flex flex-col items-center">
                 <Button
                   variant="ghost"
@@ -93,7 +107,7 @@ function App() {
           </div>
 
           {/* Right Column - Project Info */}
-          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24">
+          <div id="project" className="lg:col-span-4 space-y-8 lg:sticky lg:top-24">
             <div className="flex items-center gap-3 ml-2">
               <div className="h-4 w-1 bg-zinc-700 rounded-full"></div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.projectInfo}</h3>
@@ -103,6 +117,17 @@ function App() {
 
         </div>
       </main>
+
+      {/* Scroll to Top Button */}
+      <div className={`fixed bottom-8 right-8 transition-all duration-500 z-50 ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+        <Button
+          onClick={scrollToTop}
+          size="icon"
+          className="h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white shadow-2xl hover:bg-white/10 hover:border-white/20 transition-all group"
+        >
+          <ArrowUp className="h-5 w-5 group-hover:-translate-y-0.5 transition-transform" />
+        </Button>
+      </div>
 
       {/* Decorative background glow */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden">

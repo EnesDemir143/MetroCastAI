@@ -155,7 +155,7 @@ const IntelligenceConsole = () => {
                                 </div>
                                 <div className="space-y-0.5">
                                     <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Final Error (MAE)</p>
-                                    <p className="text-lg font-black text-white italic">{metrics?.mae?.toFixed(4) || '---'}°C</p>
+                                    <p className="text-lg font-black text-white italic">{metrics?.mae?.toFixed(4) || '---'}</p>
                                 </div>
                             </div>
                         </div>
