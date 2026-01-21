@@ -1,35 +1,116 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { useWeatherStore } from './store/useWeatherStore';
+import Header from './components/Header';
+import CurrentWeather from './components/CurrentWeather';
+import WeatherTabs from './components/WeatherTabs';
+import ForecastChart from './components/ForecastChart';
+import DailyForecast from './components/DailyForecast';
+import ControlBar from './components/ControlBar';
+import ProjectInfo from './components/ProjectInfo';
+import RequestBuilder from './components/RequestBuilder';
+import IntelligenceConsole from './components/IntelligenceConsole';
+import { Button } from "@/components/ui/button"
+import { ChevronDown, Settings2 } from 'lucide-react'
+import { translations } from './utils/translations';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { fetchSampleData, language } = useWeatherStore();
+  const [showRequestBuilder, setShowRequestBuilder] = useState(false);
+  const t = translations[language];
+
+  useEffect(() => {
+    fetchSampleData();
+  }, [fetchSampleData]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen font-sans selection:bg-primary/30 antialiased">
+      <Header />
+
+      <main className="container mx-auto py-12 px-6 max-w-[1440px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+
+          {/* Left Column - Dashboard & Controls */}
+          <div className="lg:col-span-8 space-y-12">
+            <div className="space-y-12">
+              <CurrentWeather />
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 ml-2">
+                  <div className="h-4 w-1 bg-primary rounded-full shadow-[0_0_10px_rgba(56,189,248,0.5)]"></div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.hourlyForecast}</h3>
+                </div>
+                <div className="glass rounded-[2.5rem] p-8 border-white/[0.05]">
+                  <WeatherTabs />
+                  <ForecastChart />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-1 bg-zinc-700 rounded-full"></div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.forecast}</h3>
+                  </div>
+                </div>
+                <DailyForecast />
+              </div>
+            </div>
+
+            {/* Developer Console / Simulation Section */}
+            <div className="pt-12 space-y-10">
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRequestBuilder(!showRequestBuilder)}
+                  className={`group gap-4 rounded-full px-10 h-14 glass border-white/[0.05] hover:border-primary/50 transition-all duration-500 hover:bg-primary/5 ${showRequestBuilder ? 'border-primary/40 bg-primary/5' : ''}`}
+                >
+                  <div className={`p-2 rounded-xl transition-all ${showRequestBuilder ? 'bg-primary/20 scale-110' : 'bg-white/5 group-hover:bg-primary/10'}`}>
+                    <Settings2 className={`h-4 w-4 ${showRequestBuilder ? 'text-primary' : 'text-zinc-500 group-hover:text-primary'}`} />
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className={`text-[11px] font-black uppercase tracking-[0.2em] transition-colors ${showRequestBuilder ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                      {showRequestBuilder ? 'Close Simulation Console' : 'Open Developer Console'}
+                    </span>
+                    <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Manual Inference & API Testing</span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 ml-4 transition-transform duration-500 ${showRequestBuilder ? 'rotate-180 text-primary' : 'text-zinc-600'}`} />
+                </Button>
+              </div>
+
+              {showRequestBuilder && (
+                <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-6 duration-700 ease-out">
+                  <RequestBuilder />
+                </div>
+              )}
+            </div>
+
+            <ControlBar />
+
+            <div className="pt-12 border-t border-white/[0.03]">
+              <IntelligenceConsole />
+            </div>
+          </div>
+
+          {/* Right Column - Project Info */}
+          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24">
+            <div className="flex items-center gap-3 ml-2">
+              <div className="h-4 w-1 bg-zinc-700 rounded-full"></div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{t.projectInfo}</h3>
+            </div>
+            <ProjectInfo />
+          </div>
+
+        </div>
+      </main>
+
+      {/* Decorative background glow */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]"></div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

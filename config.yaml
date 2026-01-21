@@ -16,8 +16,8 @@ training:
   epochs: 100
   learning_rate: 0.0001  # Transformer için uygun LR
   weight_decay: 0.0001
-  seq_len: 24
-  pred_len: 24
+  seq_len: 168
+  pred_len: 168
   
   # Learning rate scheduler
   scheduler:
