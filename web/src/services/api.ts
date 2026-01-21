@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/predict';
+const API_BASE_URL = import.meta.env.PROD
+    ? 'https://api.metrocast.enesdemir.me/predict'
+    : 'http://localhost:3000/predict';
 
 export interface WeatherInputRecord {
     timestamp: string; // ISO 8601
