@@ -28,10 +28,11 @@ const DailyForecast = () => {
             const currentDayDate = new Date(startDate);
             currentDayDate.setDate(startDate.getDate() + i);
 
-            // Slice 24 hours for each day
-            // Day 0 might be partial depending on the current hour, 
-            // but for simplicity we can take blocks of 24
-            const dayPreds = predictions.slice(i * 24, (i + 1) * 24);
+            // Slice 24 hours for each day.
+            // Even if the last day has fewer than 24 hours (partial data), we should use what's available.
+            const sliceStart = i * 24;
+            const sliceEnd = Math.min((i + 1) * 24, predictions.length);
+            const dayPreds = predictions.slice(sliceStart, sliceEnd);
 
             const min = dayPreds.length > 0 ? Math.round(Math.min(...dayPreds)) : '--';
             const max = dayPreds.length > 0 ? Math.round(Math.max(...dayPreds)) : '--';

@@ -143,7 +143,7 @@ const IntelligenceConsole = () => {
                                     <BarChart3 className="h-4 w-4 text-zinc-400 group-hover:text-amber-500" />
                                 </div>
                                 <div className="space-y-0.5">
-                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Final Accuracy (MAE)</p>
+                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Final Error (MAE)</p>
                                     <p className="text-lg font-black text-white italic">{metrics?.mae?.toFixed(4) || '---'}°C</p>
                                 </div>
                             </div>
@@ -216,6 +216,7 @@ const IntelligenceConsole = () => {
                                                     strokeWidth={2.5}
                                                     dot={false}
                                                     animationDuration={1500}
+                                                    connectNulls={true}
                                                 />
                                             </LineChart>
                                         </ResponsiveContainer>
@@ -236,7 +237,7 @@ const IntelligenceConsole = () => {
                                             <LucideLineChart className="h-4 w-4 text-amber-500" />
                                         </div>
                                         <div>
-                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">Accuracy Graphics</h4>
+                                            <h4 className="text-[11px] font-black text-white uppercase tracking-widest italic">Error Metrics (MAE)</h4>
                                             <p className="text-[8px] text-zinc-500 uppercase font-black">{t.maeChart}</p>
                                         </div>
                                     </div>
@@ -276,6 +277,7 @@ const IntelligenceConsole = () => {
                                                     strokeWidth={2.5}
                                                     dot={false}
                                                     animationDuration={1500}
+                                                    connectNulls={true}
                                                 />
                                             </LineChart>
                                         </ResponsiveContainer>

@@ -91,7 +91,7 @@ export const fetchRunHistory = async (entity: string, project: string, apiKey: s
                     edges {
                         node {
                             state
-                            history
+                            history(samples: 10000)
                         }
                     }
                 }
@@ -123,21 +123,65 @@ export const fetchRunHistory = async (entity: string, project: string, apiKey: s
 
         const historyRaw = activeRun.node.history;
 
-        // WandB 'history' field usually returns an array of JSON strings
-        const points = historyRaw.map((itemStr: string) => {
+        // WandB 'history' field usually returns an array of JSON strings or objects
+        const points = historyRaw.map((itemStr: any) => {
             try {
-                const item = JSON.parse(itemStr);
+                const item = typeof itemStr === 'string' ? JSON.parse(itemStr) : itemStr;
+
+                // If it's just gradient info (very common in WandB), skip it
+                const hasMetrics = item.loss !== undefined ||
+                    item['train/loss'] !== undefined ||
+                    item['train/batch_loss'] !== undefined ||
+                    item['val/mae'] !== undefined ||
+                    item['val/mae_celsius'] !== undefined;
+
+                if (!hasMetrics) return null;
+
+                let epoch = item.epoch;
+
+                // If epoch is missing but we have steps, we generally want to avoid partial updates
+                // unless we can group them. But here user insists on "epoch only" view.
+                // We will drop entries that don't have an explicit epoch or if we can't infer it properly.
+                // Note: WandB often logs integer steps but float epochs (e.g. 1.1, 1.2).
+                if (epoch === undefined || epoch === null) {
+                    return null;
+                }
+
                 return {
-                    epoch: item.epoch !== undefined ? item.epoch : (item._step || 0),
-                    loss: item['train/loss'] || item['loss'] || 0,
-                    valMae: item['val/mae_celsius'] || item['val/mae'] || 0,
+                    epoch: epoch,
+                    intEpoch: Math.floor(epoch),
+                    loss: item['train/loss'] ?? item['train/batch_loss'] ?? item['loss'] ?? null,
+                    valMae: item['val/mae_celsius'] ?? item['val/mae'] ?? null,
                 };
             } catch (e) {
                 return null;
             }
         }).filter((p: any) => p !== null);
 
-        return points.sort((a: any, b: any) => a.epoch - b.epoch);
+        // Group by integer epoch and take the latest value for that epoch
+        const epochGroups = new Map<number, any>();
+
+        points.forEach((p: any) => {
+            const current = epochGroups.get(p.intEpoch);
+
+            if (current) {
+                const merged = {
+                    ...current,
+                    loss: p.loss ?? current.loss,
+                    valMae: p.valMae ?? current.valMae,
+                    epoch: p.epoch // Keep latest epoch timestamp
+                };
+                epochGroups.set(p.intEpoch, merged);
+            } else {
+                epochGroups.set(p.intEpoch, p);
+            }
+        });
+
+        // Convert map back to array
+        const aggregatedPoints = Array.from(epochGroups.values());
+
+        // Sort by epoch to ensure correct chart rendering
+        return aggregatedPoints.sort((a: any, b: any) => a.epoch - b.epoch);
     } catch (error) {
         console.error('Error fetching WandB history:', error);
         return [];
